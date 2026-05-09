@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- SEO -->
+  <meta name="description" content="Luxury skincare and spa website offering premium beauty treatments and wellness services.">
+  <meta name="author" content="Precious Fabiyi">
+
+  <title>Fife's Beauty Hub & Spa</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="styles/styles.css">
+  <link rel="stylesheet" href="styles/larger.css">
+
+  <!-- JavaScript -->
+  <script src="scripts/main.js" defer></script>
+
+</head>
+
+<body>
+
+<!-- HEADER -->
+<header>
+
+  <div class="logo">
+    ✨ fife's Beauty Hub & spa
+  </div>
+
+
+  <nav>
+    <ul class="nav-links">
+      <li><a href="#">Home</a></li>
+      <li><a href="#products">Skincare</a></li>
+      <li><a href="#services">Spa Services</a></li>
+      <li><a href="#reviews">Reviews</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ul>
+  </nav>
+
+</header>
+
+<!-- HERO -->
+<section class="hero">
+
+<div class="hero-overlay">
+    <div class="brand-bg"></div>
+
+    <div class="hero-content">
+        <h2>Fife’s Beauty Hub & Spa</h2>
+        <p>Luxury Beauty • Relaxation • Wellness</p>
+        <a href="#book" class="btn">Book Appointment</a>
+        
+    </div>
+    
+
+    <p>
+      Relax, refresh, and glow with premium spa treatments
+      and skincare products designed for radiant beauty.
+    </p>
+
+    <button>
+      Book Appointment
+    </button>
+
+  </div>
+
+</section>
+
+<!-- PRODUCTS -->
+<section class="products" id="products">
+
+  <h2>Premium Skincare Collection</h2>
+
+  <div class="product-grid">
+
+    <!-- JS inserts products -->
+
+  </div>
+
+</section>
+
+<!-- SERVICES -->
+<section class="services" id="services">
+
+  <h2>Our Spa Services</h2>
+
+  <div class="service-container">
+
+    <div class="service-box">
+      <h3>Facial Therapy</h3>
+      <p>
+        Deep cleansing facial treatments for healthy glowing skin.
+      </p>
+    </div>
+
+    <div class="service-box">
+      <h3>Body Massage</h3>
+      <p>
+        Relaxing aromatherapy massage for total body wellness.
+      </p>
+    </div>
+
+    <div class="service-box">
+      <h3>Skin Rejuvenation</h3>
+      <p>
+        Advanced skincare procedures for youthful radiant skin.
+      </p>
+    </div>
+
+  </div>
+
+</section>
+
+<!-- REVIEWS -->
+<section class="reviews" id="reviews">
+
+  <h2>Customer Reviews</h2>
+
+  <form id="reviewForm">
+
+    <input 
+      type="text" 
+      id="reviewName"
+      placeholder="Your Name"
+      required
+    >
+
+    <textarea 
+      id="reviewComment"
+      placeholder="Write your review..."
+      required
+    ></textarea>
+
+    <button type="submit">
+      Submit Review
+    </button>
+
+  </form>
+
+  <div id="reviewList"></div>
+
+</section>
+
+<!-- CONTACT -->
+<section class="contact" id="contact">
+
+  <h2>Book a Spa Session</h2>
+
+  <form>
+
+    <label for="name">Name</label>
+
+    <input 
+      type="text" 
+      id="name" 
+      placeholder="Enter your name"
+      required
+    >
+
+    <label for="email">Email</label>
+
+    <input 
+      type="email" 
+      id="email"
+      placeholder="Enter your email"
+      required
+    >
+
+    <label for="message">Requested Service</label>
+
+    <textarea 
+      id="message"
+      rows="5"
+      placeholder="Tell us what spa/skincare service you want..."
+      required
+    ></textarea>
+
+    <input type="submit" value="Book Now">
+
+  </form>
+
+</section>
+
+<!-- FOOTER -->
+<footer>
+
+  <div class="footer-container">
+
+    <div>
+      <h3>Glow Spa</h3>
+      <p>
+        Premium skincare and luxury spa treatments.
+      </p>
+    </div>
+
+    <div>
+      <h3>Follow Us</h3>
+
+      <div class="socials">
+
+    <li><a href="https://www.instagram.com/fifeeh_1?igsh=MWRyNWZwa2N5NW5hZg%3D%3D&utm_source=qr" target="_blank" rel="noopener">Instagram</a></li>
+    <li><a href="https://snapchat.com/t/yv0TX8jo" target="_blank" rel="noopener">Snapchat</a></li>
+    <li><a href="https://www.tiktok.com/@fifes_beauty_hub?_r=1&_t=ZS-96Dh4rOofJ6" target="_blank" rel="noopener">TikTok</a></li>
+
+      </div>
+    </div>
+
+    <div>
+      <h3>Cart Bookings</h3>
+      <p>
+        Total Bookings:
+        <span id="cartCount">0</span>
+      </p>
+    </div>
+
+  </div>
+
+  <p class="copyright">
+    © <span id="year"></span> Fife's Beauty Hub & Spa
+  </p>
+
+  <p id="lastModified"></p>
+
+</footer>
+
+</body>
+</html>

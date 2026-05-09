@@ -1,0 +1,379 @@
+/* ---------------- GLOBAL ---------------- */
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+body{
+    font-family:'Poppins',sans-serif;
+    background:#fffaf8;
+    color:#333;
+    line-height:1.7;
+}
+
+/* ---------------- HEADER ---------------- */
+
+header{
+    background:#fff;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:1rem 2rem;
+    position:sticky;
+    top:0;
+    z-index:1000;
+    box-shadow:0 2px 10px rgba(0,0,0,0.1);
+}
+
+.logo{
+    font-size:1.7rem;
+    font-weight:700;
+    color:#d96c8f;
+}
+
+.nav-links{
+    list-style:none;
+}
+
+.nav-links li{
+    margin:1rem 0;
+}
+
+.nav-links a{
+    text-decoration:none;
+    color:#333;
+    font-weight:600;
+    transition:0.3s;
+}
+
+.nav-links a:hover{
+    color:#d96c8f;
+}
+
+/* ---------------- HERO ---------------- */
+
+.hero{
+    position:relative;
+    height:90vh;
+    background:url("../images/spa-hero.webp") center/cover no-repeat;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    text-align:center;
+    overflow:hidden;
+}
+
+.hero-overlay{
+    position:absolute;
+    inset:0;
+    background:rgba(0,0,0,0.45);
+}
+
+.hero-content{
+    position:relative;
+    z-index:2;
+    color:white;
+    padding:1rem;
+}
+
+.hero-content h1{
+    font-size:2.5rem;
+    margin-bottom:1rem;
+    animation:fadeIn 2s ease;
+}
+
+.hero-content p{
+    max-width:600px;
+    margin:auto;
+    margin-bottom:2rem;
+}
+
+.hero-content button{
+    background:#d96c8f;
+    color:white;
+    border:none;
+    padding:1rem 2rem;
+    border-radius:30px;
+    font-size:1rem;
+    cursor:pointer;
+    transition:0.3s;
+}
+
+.hero-content button:hover{
+    background:#b85473;
+}
+
+/* ---------------- PRODUCTS ---------------- */
+
+.products{
+    padding:4rem 1rem;
+    text-align:center;
+}
+
+.products h2{
+    color:#d96c8f;
+    margin-bottom:2rem;
+}
+
+.product-grid{
+    display:grid;
+    gap:2rem;
+}
+
+.card{
+    background:white;
+    border-radius:20px;
+    overflow:hidden;
+    box-shadow:0 5px 20px rgba(0,0,0,0.1);
+    transition:0.4s;
+}
+
+.card:hover{
+    transform:translateY(-10px);
+}
+
+.card img{
+    width:100%;
+    height:260px;
+    object-fit:cover;
+}
+
+.card-content{
+    padding:1.5rem;
+}
+
+.card h3{
+    color:#d96c8f;
+    margin-bottom:0.5rem;
+}
+
+.category{
+    color:#777;
+}
+
+.price{
+    font-size:1.2rem;
+    font-weight:700;
+    margin:1rem 0;
+}
+
+.buy-btn{
+    background:#d96c8f;
+    color:white;
+    border:none;
+    padding:0.8rem 1.5rem;
+    border-radius:25px;
+    cursor:pointer;
+    transition:0.3s;
+}
+
+.buy-btn:hover{
+    background:#b85473;
+}
+
+/* ---------------- SERVICES ---------------- */
+
+.services{
+    background:#fff0f5;
+    padding:4rem 1rem;
+    text-align:center;
+}
+
+.services h2{
+    color:#d96c8f;
+    margin-bottom:2rem;
+}
+
+.service-container{
+    display:grid;
+    gap:2rem;
+}
+
+.service-box{
+    background:white;
+    padding:2rem;
+    border-radius:20px;
+    box-shadow:0 5px 15px rgba(0,0,0,0.1);
+}
+
+/* ---------------- REVIEWS ---------------- */
+
+.reviews{
+    padding:4rem 1rem;
+    text-align:center;
+}
+
+.reviews h2{
+    color:#d96c8f;
+    margin-bottom:2rem;
+}
+
+#reviewForm{
+    max-width:600px;
+    margin:auto;
+}
+
+#reviewForm input,
+#reviewForm textarea{
+    width:100%;
+    padding:1rem;
+    margin-bottom:1rem;
+    border:1px solid #ddd;
+    border-radius:10px;
+}
+
+#reviewForm button{
+    background:#d96c8f;
+    color:white;
+    border:none;
+    padding:1rem 2rem;
+    border-radius:30px;
+    cursor:pointer;
+}
+
+.review-card{
+    background:white;
+    padding:1.5rem;
+    margin:1rem auto;
+    max-width:700px;
+    border-radius:15px;
+    box-shadow:0 3px 10px rgba(0,0,0,0.1);
+}
+
+/* ---------------- CONTACT ---------------- */
+
+.contact{
+    background:#fff0f5;
+    padding:4rem 1rem;
+}
+
+.contact h2{
+    text-align:center;
+    color:#d96c8f;
+    margin-bottom:2rem;
+}
+
+.contact form{
+    max-width:700px;
+    margin:auto;
+    display:flex;
+    flex-direction:column;
+}
+
+.contact input,
+.contact textarea{
+    padding:1rem;
+    margin-bottom:1.5rem;
+    border-radius:10px;
+    border:1px solid #ccc;
+}
+
+.contact input[type="submit"]{
+    background:#d96c8f;
+    color:white;
+    border:none;
+    cursor:pointer;
+    transition:0.3s;
+}
+
+.contact input[type="submit"]:hover{
+    background:#b85473;
+}
+
+/* ---------------- FOOTER ---------------- */
+
+footer{
+    background:#222;
+    color:white;
+    padding:3rem 1rem;
+}
+
+.footer-container{
+    display:grid;
+    gap:2rem;
+}
+
+.socials{
+    display:flex;
+    flex-direction:column;
+    gap:0.5rem;
+}
+
+.socials a{
+    color:#f7b2c4;
+    text-decoration:none;
+}
+
+.socials a:hover{
+    color:white;
+}
+
+.copyright{
+    text-align:center;
+    margin-top:2rem;
+}
+.hero-overlay {
+    position: relative;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    overflow: hidden;
+    background: #000;
+}
+
+.brand-bg {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 500px;
+    height: 500px;
+    background: url('logo.png') center center no-repeat;
+    background-size: contain;
+    opacity: 0.15; /* fades logo into background */
+    transform: translate(-50%, -50%);
+    z-index: 1;
+}
+
+.hero-content {
+    position: relative;
+    z-index: 2;
+    color: white;
+}
+
+.hero-content h2 {
+    font-size: 42px;
+    color: #d4af37;
+}
+
+.hero-content p {
+    font-size: 18px;
+    margin: 15px 0;
+}
+
+.btn {
+    background: #d4af37;
+    color: black;
+    padding: 12px 25px;
+    border-radius: 30px;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+/* ---------------- ANIMATION ---------------- */
+
+@keyframes fadeIn{
+
+    from{
+        opacity:0;
+        transform:translateY(40px);
+    }
+
+    to{
+        opacity:1;
+        transform:translateY(0);
+    }
+}
