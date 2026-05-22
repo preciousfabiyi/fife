@@ -1,564 +1,265 @@
+<!-- ========================= -->
+<!-- FILE: index.html -->
+<!-- ========================= -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Fife Beauty Hub & Spa</title>
 
-  <title>Fife's Beauty Hub & Spa</title>
+  <!-- FONT AWESOME -->
+  <link rel="stylesheet"
+  href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"/>
 
-  <!-- FAVICON -->
-  <link rel="icon" type="image/png" href="images/fife-logo.jpg">
+  <!-- CSS -->
+  <link rel="stylesheet" href="styles/styles.css"/>
+  <link rel="stylesheet" href="styles/larger.css"/>
+</head>
 
-  <!-- GOOGLE FONT -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!-- SHOPPING CART -->
 
-  <!--stylesheet-->
-  <link rel="stylesheet" href="styles.css">
-  <link rel="stylesheet" href="larger.css">
+<div class="cart-sidebar" id="cartSidebar">
 
+    <div class="cart-header">
+        <h2>Shopping Cart</h2>
 
-  <link
-    href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
-    rel="stylesheet"
-  >
-
-  <meta
-    name="description"
-    content="Luxury skincare, wellness, spa treatments and beauty products."
-  >
-
-
-
-
-  <!-- HEADER -->
-
-  <header>
-
-    <div class="logo">
-
-      <img
-        src="images/fife-logo.jpg"
-        alt="Fife's Beauty Hub Logo"
-        class="business-logo"
-      >
-
-      <span>✨ Fife's Beauty Hub & Spa</span>
-
+        <span id="closeCart">&times;</span>
     </div>
 
-    <nav>
+    <div id="cartItems"></div>
 
-      <ul class="nav-links">
-        <li><a href="#home">Home</a></li>
-        <li><a href="#products">Products</a></li>
-        <li><a href="#services">Services</a></li>
-        <li><a href="#booking">Booking</a></li>
-        <li><a href="#reviews">Reviews</a></li>
-        <li><a href="admin.html">Admin upload</a></li>
-      </ul>
+    <div class="cart-footer">
+        <h3>Total: $<span id="cartTotal">0</span></h3>
 
-    </nav>
-
-  </header>
-
-  <!-- HERO -->
-
-  <section class="hero" id="home">
-
-    <div class="hero-content">
-
-      <h1>Luxury Beauty & Wellness</h1>
-
-      <p>
-        Experience radiant skincare, luxury spa treatments,
-        and premium wellness services tailored for your glow.
-      </p>
-
-      <a href="#booking" class="btn">
-        Book Appointment
-      </a>
-
+        <button>Checkout</button>
     </div>
 
-  </section>
+</div>
+<body>
 
+<!-- ================= HEADER ================= -->
 
+<header class="header">
 
-  <!-- PRODUCTS -->
+  <div class="logo">
+    <h1>Fife Beauty Hub & Spa</h1>
+    <img src="images/fife-logo.jpg" alt="Fife Beauty Hub & Spa Logo">
+  </div>
 
-  <section id="products">
+  <nav class="navbar">
+    <a href="#home">Home</a>
+    <a href="#services">Services</a>
+    <a href="#products">Products</a>
+    <a href="#reviews">Reviews</a>
+    <a href="#appointment">Appointment</a>
+    <a href="#contact">Contact</a>
+  </nav>
 
-    <div class="section-title">
-      <h2>Premium Skincare Products</h2>
-      <p>Luxury skincare products for glowing healthy skin.</p>
+  <div class="icons">
+    <i class="fa-solid fa-cart-shopping"></i>
+    <i class="fa-solid fa-user"></i>
+  </div>
+
+</header>
+
+<!-- ================= HERO SECTION ================= -->
+
+<section class="hero" id="home">
+
+  <div class="hero-text">
+    <h2>Glow Naturally With Confidence</h2>
+
+    <p>
+      Luxury Pedicure, Facial, Skin Care &
+      Professional Consultation For All Body Types
+    </p>
+
+    <button>Book Appointment</button>
+  </div>
+
+</section>
+
+<!-- ================= SERVICES ================= -->
+
+<section class="services" id="services">
+
+  <h2 class="title">Our Services</h2>
+
+  <div class="service-container">
+
+    <div class="service-card">
+      <i class="fa-solid fa-spa"></i>
+      <h3>Facial Treatment</h3>
+      <p>Professional facial care and glowing skin therapy.</p>
     </div>
 
-    <div class="products-grid">
+    <div class="service-card">
+      <i class="fa-solid fa-hand-sparkles"></i>
+      <h3>Luxury Pedicure</h3>
+      <p>Premium nail and foot care treatment.</p>
+    </div>
 
-      <!-- PRODUCT 1 -->
+    <div class="service-card">
+      <i class="fa-solid fa-heart"></i>
+      <h3>Skin Consultation</h3>
+      <p>Consultation for all body and skin types.</p>
+    </div>
 
-      <div class="product-card">
+  </div>
 
-        <img
-          src="https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?q=80&w=1200&auto=format&fit=crop"
-          alt="Glow Face Serum"
-        >
+</section>
 
-        <div class="product-content">
+<!-- ================= PRODUCTS ================= -->
 
-          <h3>Glow Face Serum</h3>
+<section class="products" id="products">
 
-          <p>
-            Hydrating serum for radiant and youthful skin.
-          </p>
+  <h2 class="title">Featured Products</h2>
 
-          <div class="price">₦12,000</div>
+  <div class="product-container">
 
-          <button
-            class="cart-btn"
-            onclick="addToCart('Glow Face Serum', 12000)"
-          >
-            Add to Cart
-          </button>
+    <!-- PRODUCT 1 -->
+    <div class="product-card">
 
-        </div>
-
+      <div class="product-image">
+        <img src="https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?q=80&w=1200&auto=format&fit=crop" alt="">
       </div>
 
-      <!-- PRODUCT 2 -->
+      <button class="add-cart"
+data-name="Skin Glow Cream"
+data-price="25">
 
-      <div class="product-card">
+Add To Cart
 
-        <img
-          src="https://images.unsplash.com/photo-1620916566398-39f1143ab7be?q=80&w=1200&auto=format&fit=crop"
-          alt="Luxury Body Butter"
-        >
+</button>
 
-        <div class="product-content">
-
-          <h3>Luxury Body Butter</h3>
-
-          <p>
-            Deep moisturizing butter for smooth glowing skin.
-          </p>
-
-          <div class="price">₦9,500</div>
-
-          <button
-            class="cart-btn"
-            onclick="addToCart('Luxury Body Butter', 9500)"
-          >
-            Add to Cart
-          </button>
-
-        </div>
-
-      </div>
-
-      <!-- PRODUCT 3 -->
-
-      <div class="product-card">
-
-        <img
-          src="https://images.unsplash.com/photo-1598440947619-2c35fc9aa908?q=80&w=1200&auto=format&fit=crop"
-          alt="Vitamin Spa Mask"
-        >
-
-        <div class="product-content">
-
-          <h3>Vitamin Spa Mask</h3>
-
-          <p>
-            Brightening face mask enriched with vitamins.
-          </p>
-
-          <div class="price">₦7,000</div>
-
-          <button
-            class="cart-btn"
-            onclick="addToCart('Vitamin Spa Mask', 7000)"
-          >
-            Add to Cart
-          </button>
-
-        </div>
-
+        <button>Add To Cart</button>
       </div>
 
     </div>
 
-    <!-- CART -->
+    <!-- PRODUCT 2 -->
+    <div class="product-card">
 
-    <div class="cart-section">
-
-      <h2>Your Cart</h2>
-
-      <div id="cartItems"></div>
-
-      <div class="cart-total">
-        Total: ₦<span id="cartTotal">0</span>
-      </div>
-    </div>
-
-  </section>
-
-  <!-- SERVICES -->
-
-  <section id="services">
-
-    <div class="section-title">
-      <h2>Spa Services</h2>
-      <p>Relaxation and wellness treatments designed for beauty and comfort.</p>
-    </div>
-
-    <div class="services-grid">
-
-      <div class="service-card">
-        <div class="service-content">
-          <h3>Facial Therapy</h3>
-
-          <p>
-            Deep cleansing facial treatment for glowing skin.
-          </p>
-        </div>
+      <div class="product-image">
+        <img src="https://images.unsplash.com/photo-1515377905703-c4788e51af15?q=80&w=1200&auto=format&fit=crop" alt="">
       </div>
 
-      <div class="service-card">
-        <div class="service-content">
-          <h3>Pedicure</h3>
+      <div class="product-info">
+        <h3>Facial Care Kit</h3>
+        <p>$40</p>
 
-          <p>
-            Pampering Pedicure for soft and smooth feet
-          </p>
-        </div>
-      </div>
-      
-
-    </div>
-
-  </section>
-
-  <!-- BOOKING -->
-
-  <section class="booking" id="booking">
-
-    <div class="section-title">
-      <h2>Book a Spa Session</h2>
-      <p>Schedule your luxury beauty experience today.</p>
-    </div>
-
-    <form>
-
-      <input type="text" placeholder="Full Name" required>
-
-      <input type="email" placeholder="Email Address" required>
-
-      <input type="tel" placeholder="Phone Number" required>
-
-      <select required>
-
-        <option value="">
-          Select Service
-        </option>
-
-        <option>Facial Therapy</option>
-        <option>Body Massage</option>
-        <option>Skin Rejuvenation</option>
-
-      </select>
-
-      <textarea placeholder="Additional details"></textarea>
-
-      <button type="submit">
-        Book Appointment
-      </button>
-
-    </form>
-
-  </section>
-
-  <!-- REVIEWS -->
-
-  <section id="reviews">
-
-    <div class="section-title">
-      <h2>Customer Reviews</h2>
-      <p>What our clients say about us.</p>
-    </div>
-
-    <div class="reviews-grid">
-
-      <div class="review-card">
-        <div class="review-content">
-
-          <p>
-            “Amazing spa experience. My skin feels refreshed!”
-          </p>
-
-          <h4>- Sarah A.</h4>
-
-        </div>
-      </div>
-
-      <div class="review-card">
-        <div class="review-content">
-
-          <p>
-            “Professional service and luxurious skincare products.”
-          </p>
-
-          <h4>- Anita K.</h4>
-
-        </div>
-      </div>
-
-      <div class="review-card">
-        <div class="review-content">
-
-          <p>
-            “Best massage and facial treatment I have experienced.”
-          </p>
-
-          <h4>- Grace O.</h4>
-
-        </div>
+        <button>Add To Cart</button>
       </div>
 
     </div>
 
-  </section>
+    <!-- PRODUCT 3 -->
+    <div class="product-card">
 
-  <!-- FOOTER -->
-
-  <footer>
-
-    <div class="footer-grid">
-
-      <div>
-
-        <h3>Fife's Beauty Hub & Spa</h3>
-
-        <p>
-          Luxury beauty, skincare products,
-          and premium spa treatments.
-        </p>
-
+      <div class="product-image">
+        <img src="https://images.unsplash.com/photo-1556228578-8c89e6adf883?q=80&w=1200&auto=format&fit=crop" alt="">
       </div>
 
-      <div>
+      <div class="product-info">
+        <h3>Body Lotion</h3>
+        <p>$18</p>
 
-        <h3>Follow Us</h3>
-
-        <div class="social-links">
-
-          <a href="https://instagram.com" target="_blank">
-            Instagram
-          </a>
-
-          <a href="https://snapchat.com" target="_blank">
-            Snapchat
-          </a>
-
-          <a href="https://tiktok.com" target="_blank">
-            TikTok
-          </a>
-
-        </div>
-
-      </div>
-
-      <div>
-
-        <h3>Contact</h3>
-
-        <p>Email: victoriaayomide32@gmail.com</p>
-
-        <p>Phone: +234 9165028766</p>
-
-        <p>Lagos, Nigeria</p>
-
+        <button>Add To Cart</button>
       </div>
 
     </div>
 
-    <div class="copyright">
+  </div>
 
-      <p>
-        © <span id="year"></span>
-        Fife's Beauty Hub & Spa.
-        All Rights Reserved.
-      </p>
+</section>
 
-    </div>
+<!-- ================= REVIEWS ================= -->
 
-  </footer>
+<section class="reviews" id="reviews">
 
-  <!-- JAVASCRIPT -->
+  <h2 class="title">Customer Reviews</h2>
 
-  <script>
+  <form id="reviewForm">
 
-    let cart = [];
-    let total = 0;
+    <input type="text" id="name"
+    placeholder="Your Name" required>
 
-    const cartItems = document.getElementById("cartItems");
-    const cartTotal = document.getElementById("cartTotal");
+    <textarea id="review"
+    placeholder="Write Your Review"
+    required></textarea>
 
-    // ADD TO CART
+    <button type="submit">Submit Review</button>
 
-    function addToCart(product, price){
+  </form>
 
-      cart.push({
-        product,
-        price
-      });
+  <div id="reviewList"></div>
 
-      total += price;
+</section>
 
-      updateCart();
-    }
+<!-- ================= APPOINTMENT ================= -->
 
-    // REMOVE ITEM
+<section class="appointment" id="appointment">
 
-    function removeItem(index){
+  <h2 class="title">Book Appointment</h2>
 
-      total -= cart[index].price;
+  <form class="appointment-form">
 
-      cart.splice(index, 1);
+    <input type="text"
+    placeholder="Full Name" required>
 
-      updateCart();
-    }
+    <input type="email"
+    placeholder="Email Address" required>
 
-    // UPDATE CART
+    <input type="date" required>
 
-    function updateCart(){
+    <select required>
+      <option>Select Service</option>
+      <option>Facial Treatment</option>
+      <option>Luxury Pedicure</option>
+      <option>Skin Consultation</option>
+    </select>
 
-      cartItems.innerHTML = "";
+    <textarea placeholder="Additional Information"></textarea>
 
-      cart.forEach((item, index) => {
+    <button type="submit">Book Now</button>
 
-        const div = document.createElement("div");
+  </form>
 
-        div.classList.add("cart-item");
+</section>
 
-        div.innerHTML = `
-          <span>${item.product}</span>
+<!-- ================= CONTACT ================= -->
 
-          <div>
+<section class="contact" id="contact">
 
-            <span>₦${item.price.toLocaleString()}</span>
+  <h2 class="title">Contact Us</h2>
 
-            <button
-              class="remove-btn"
-              onclick="removeItem(${index})"
-            >
-              Remove
-            </button>
+  <div class="contact-box">
 
-          </div>
-        `;
+    <p><i class="fa-solid fa-location-dot"></i> Ilorin, Nigeria</p>
 
-        cartItems.appendChild(div);
+    <p><i class="fa-solid fa-phone"></i> +234 9165028766</p>
 
-      });
+    <p><i class="fa-solid fa-envelope"></i>
+       victoriaayomide32@gmail.com
+    </p>
 
-      cartTotal.textContent = total.toLocaleString();
+  </div>
 
-    }
+</section>
 
-    // PAYMENT BUTTON
+<!-- ================= FOOTER ================= -->
 
-    document.getElementById("payBtn").addEventListener("click", () => {
+<footer>
 
-      if(total === 0){
+  <p>
+    © 2026 Fife Beauty Hub & Spa |
+    All Rights Reserved
+  </p>
 
-        alert("Your cart is empty");
-        return;
+</footer>
 
-      }
-
-      alert("Redirecting to OPay payment...");
-
-      window.open("https://www.opaycheckout.com/", "_blank");
-
-    });
-
-    // PRODUCT UPLOAD
-
-    const uploadForm = document.getElementById("uploadForm");
-
-    const productsGrid = document.querySelector(".products-grid");
-
-    uploadForm.addEventListener("submit", function(e){
-
-      e.preventDefault();
-
-      const productName =
-      document.getElementById("newProductName").value;
-
-      const productPrice =
-      document.getElementById("newProductPrice").value;
-
-      const productDescription =
-      document.getElementById("newProductDescription").value;
-
-      const imageFile =
-      document.getElementById("newProductImage").files[0];
-
-      const reader = new FileReader();
-
-      reader.onload = function(event){
-
-        const newProduct =
-        document.createElement("div");
-
-        newProduct.classList.add("product-card");
-
-        newProduct.innerHTML = `
-
-          <img
-            src="${event.target.result}"
-            alt="${productName}"
-          >
-
-          <div class="product-content">
-
-            <h3>${productName}</h3>
-
-            <p>${productDescription}</p>
-
-            <div class="price">
-              ₦${Number(productPrice).toLocaleString()}
-            </div>
-
-            <button
-              class="cart-btn"
-              onclick="addToCart('${productName}', ${productPrice})"
-            >
-              Add to Cart
-            </button>
-
-          </div>
-        `;
-
-        productsGrid.appendChild(newProduct);
-
-      };
-
-      reader.readAsDataURL(imageFile);
-
-      uploadForm.reset();
-
-      alert("New product uploaded successfully!");
-
-    });
-
-    // YEAR
-
-    document.getElementById("year").textContent =
-    new Date().getFullYear();
-
-  </script>
+<script src="scripts/main.js"></script>
 
 </body>
 </html>

@@ -1,52 +1,44 @@
-document.getElementById("adminForm").addEventListener("submit", function(e){
+/* ========================= */
+/* FILE: admin.js */
+/* ========================= */
 
-e.preventDefault();
+const productForm =
+document.getElementById("productForm");
 
-const name = document.getElementById("productName").value;
+const adminProducts =
+document.getElementById("adminProducts");
 
-const price = document.getElementById("productPrice").value;
+productForm.addEventListener("submit",
+function(e){
 
-const description = document.getElementById("productDescription").value;
+  e.preventDefault();
 
-const imageInput = document.getElementById("productImage");
+  const name =
+  document.getElementById("productName").value;
 
-const file = imageInput.files[0];
+  const price =
+  document.getElementById("productPrice").value;
 
-if(!file){
+  const image =
+  document.getElementById("productImage").value;
 
-alert("Please select an image.");
+  const product =
+  document.createElement("div");
 
-return;
+  product.classList.add("admin-product");
 
-}
+  product.innerHTML = `
+    <img src="${image}"
+    width="100%"
+    style="border-radius:15px">
 
-const reader = new FileReader();
+    <h3>${name}</h3>
 
-reader.onload = function(event){
+    <p>${price}</p>
+  `;
 
-const imageURL = event.target.result;
+  adminProducts.appendChild(product);
 
-const newProduct = {
-
-name:name,
-price:price,
-description:description,
-image:imageURL
-
-};
-
-let products = JSON.parse(localStorage.getItem("products")) || [];
-
-products.push(newProduct);
-
-localStorage.setItem("products", JSON.stringify(products));
-
-alert("Product uploaded successfully!");
-
-document.getElementById("adminForm").reset();
-
-};
-
-reader.readAsDataURL(file);
+  productForm.reset();
 
 });

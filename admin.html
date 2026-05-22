@@ -1,110 +1,50 @@
+<!-- ========================= -->
+<!-- FILE: admin.html -->
+<!-- ========================= -->
+
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
+  <meta charset="UTF-8">
+  <meta name="viewport"
+  content="width=device-width, initial-scale=1.0">
 
-<meta charset="UTF-8">
+  <title>Admin Dashboard</title>
 
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>Admin Upload</title>
-
-<style>
-
-body{
-font-family:Arial;
-background:#fff5f8;
-padding:40px;
-}
-
-.container{
-max-width:700px;
-margin:auto;
-background:white;
-padding:30px;
-border-radius:20px;
-box-shadow:0 4px 15px rgba(0,0,0,0.08);
-}
-
-h1{
-text-align:center;
-margin-bottom:30px;
-color:#d86b91;
-}
-
-form{
-display:flex;
-flex-direction:column;
-gap:20px;
-}
-
-input,
-textarea{
-padding:15px;
-border:1px solid #ddd;
-border-radius:10px;
-}
-
-button{
-padding:15px;
-background:#d86b91;
-color:white;
-border:none;
-border-radius:10px;
-cursor:pointer;
-font-size:1rem;
-}
-
-</style>
-
+  <link rel="stylesheet"
+  href="styles/admin.css">
 </head>
-
 <body>
 
-<div class="container">
+<div class="admin-container">
 
-<h1>Upload Product</h1>
+  <h1>Fife Beauty Hub Admin</h1>
 
-<form id="adminForm">
+  <form id="productForm">
 
-<input
-type="text"
-id="productName"
-placeholder="Product Name"
-required
->
+    <input type="text"
+    id="productName"
+    placeholder="Product Name" required>
 
-<input
-type="number"
-id="productPrice"
-placeholder="Product Price"
-required
->
+    <input type="text"
+    id="productPrice"
+    placeholder="Product Price" required>
 
-<input
-type="file"
-id="productImage"
-accept="image/*"
-required
->
+    <input type="text"
+    id="productImage"
+    placeholder="Image URL" required>
 
-<textarea
-id="productDescription"
-placeholder="Product Description"
-required
-></textarea>
+    <button type="submit">
+      Upload Product
+    </button>
 
-<button type="submit">
+  </form>
 
-Upload Product
-
-</button>
-
-</form>
+  <div id="adminProducts"></div>
 
 </div>
 
-<script src="admin.js"></script>
+<script src="scripts/admin.js"></script>
 
 </body>
 </html>
