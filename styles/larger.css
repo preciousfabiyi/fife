@@ -1,111 +1,49 @@
-@media screen and (min-width:768px){
+@media (max-width:768px){
 
-/* HEADER */
+      header{
+        flex-direction:column;
+        gap:15px;
+        padding:15px 5%;
+      }
 
-.nav-links{
-    display:flex;
-    gap:2rem;
-}
+      .nav-links{
+        flex-wrap:wrap;
+        justify-content:center;
+      }
 
-.nav-links li{
-    margin:0;
-}
+      .hero{
+        min-height:75vh;
+      }
 
-/* HERO */
+      .hero-content h1{
+        font-size:2.3rem;
+      }
 
-.hero-content h1{
-    font-size:4rem;
-}
+      .hero-content p{
+        font-size:1rem;
+      }
 
-/* PRODUCTS */
+      section{
+        padding:60px 5%;
+      }
 
-.product-grid{
-    grid-template-columns:repeat(3,1fr);
-    padding:0 3rem;
-}
+      .section-title h2{
+        font-size:2rem;
+      }
 
-/* SERVICES */
+      .products-grid,
+      .services-grid,
+      .reviews-grid,
+      .footer-grid{
+        grid-template-columns:1fr;
+      }
 
-.service-container{
-    grid-template-columns:repeat(3,1fr);
-    padding:0 3rem;
-}
-
-/* FOOTER */
-
-.footer-container{
-    grid-template-columns:repeat(3,1fr);
-    max-width:1200px;
-    margin:auto;
-}
-
-}
-
-/* EXTRA LARGE */
-
-@media screen and (min-width:1200px){
-
-.hero{
-    height:100vh;
-}
-
-.hero-content p{
-    font-size:1.2rem;
-}
-
-.products,
-.services,
-.reviews,
-.contact{
-    padding:6rem 4rem;
-}
-
-}
-.hero-overlay {
-    position: relative;
-    height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-    overflow: hidden;
-    background: #000;
-}
-
-.brand-bg {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 500px;
-    height: 500px;
-    background: url('logo.png') center center no-repeat;
-    background-size: contain;
-    opacity: 0.15; /* fades logo into background */
-    transform: translate(-50%, -50%);
-    z-index: 1;
-}
-
-.hero-content {
-    position: relative;
-    z-index: 2;
-    color: white;
-}
-
-.hero-content h2 {
-    font-size: 42px;
-    color: #d4af37;
-}
-
-.hero-content p {
-    font-size: 18px;
-    margin: 15px 0;
-}
-
-.btn {
-    background: #d4af37;
-    color: black;
-    padding: 12px 25px;
-    border-radius: 30px;
-    text-decoration: none;
-    font-weight: bold;
-}
+      .cart-item{
+        flex-direction:column;
+        align-items:flex-start;
+        gap:10px;
+      }
+      #admin-upload{
+      display:none;
+     }
+    }
