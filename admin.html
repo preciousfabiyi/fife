@@ -1,50 +1,83 @@
-<!-- ========================= -->
-<!-- FILE: admin.html -->
-<!-- ========================= -->
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport"
-  content="width=device-width, initial-scale=1.0">
-
-  <title>Admin Dashboard</title>
-
-  <link rel="stylesheet"
-  href="styles/admin.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin — Fife Beauty Hub</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles/admin.css">
 </head>
 <body>
 
-<div class="admin-container">
+<div class="admin-wrapper">
 
-  <h1>Fife Beauty Hub Admin</h1>
+  <!-- Sidebar -->
+  <aside class="admin-sidebar">
+    <div class="sidebar-brand">
+      <i class="fa-solid fa-spa"></i>
+      <span>Fife Admin</span>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="#" class="active"><i class="fa-solid fa-box"></i> Products</a>
+      <a href="index.html"><i class="fa-solid fa-arrow-left"></i> Back to Site</a>
+    </nav>
+  </aside>
 
-  <form id="productForm">
+  <!-- Main -->
+  <main class="admin-main">
+    <div class="admin-topbar">
+      <h1>Product Management</h1>
+      <span class="product-count" id="productCount">0 products</span>
+    </div>
 
-    <input type="text"
-    id="productName"
-    placeholder="Product Name" required>
+    <!-- Upload Form -->
+    <section class="admin-card">
+      <h2 class="card-title"><i class="fa-solid fa-plus"></i> Add New Product</h2>
+      <form id="productForm" class="product-form" novalidate>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="productName">Product Name</label>
+            <input type="text" id="productName" placeholder="e.g. Rose Glow Serum" required>
+          </div>
+          <div class="form-group">
+            <label for="productPrice">Price (₦)</label>
+            <input type="number" id="productPrice" placeholder="e.g. 25" min="0" required>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="productImage">Image URL</label>
+          <input type="url" id="productImage" placeholder="https://…" required>
+        </div>
+        <div class="form-group">
+          <label for="productCategory">Category</label>
+          <select id="productCategory">
+            <option value="" disabled selected>Select category</option>
+            <option>Skincare</option>
+            <option>Body Care</option>
+            <option>Nail Care</option>
+            <option>Facial Care</option>
+          </select>
+        </div>
+        <button type="submit" class="btn-upload">
+          <i class="fa-solid fa-upload"></i> Upload Product
+        </button>
+      </form>
+    </section>
 
-    <input type="text"
-    id="productPrice"
-    placeholder="Product Price" required>
+    <!-- Product List -->
+    <section class="admin-card">
+      <h2 class="card-title"><i class="fa-solid fa-list"></i> Uploaded Products</h2>
+      <div id="adminProducts" class="admin-product-grid">
+        <p class="empty-msg">No products uploaded yet.</p>
+      </div>
+    </section>
 
-    <input type="text"
-    id="productImage"
-    placeholder="Image URL" required>
-
-    <button type="submit">
-      Upload Product
-    </button>
-
-  </form>
-
-  <div id="adminProducts"></div>
-
+  </main>
 </div>
 
-<script src="scripts/admin.js"></script>
+<div class="toast" id="adminToast"></div>
 
+<script src="scripts/admin.js"></script>
 </body>
 </html>

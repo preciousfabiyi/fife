@@ -1,102 +1,323 @@
-/* ================= REVIEWS ================= */
+/* ============================================
+   FIFE BEAUTY HUB & SPA — Main JS
+============================================ */
 
-const reviewForm =
-document.getElementById("reviewForm");
-
-const reviewList =
-document.getElementById("reviewList");
-
-reviewForm.addEventListener("submit",
-function(e){
-
-    e.preventDefault();
-
-    const name =
-    document.getElementById("name").value;
-
-    const review =
-    document.getElementById("review").value;
-
-    const reviewCard =
-    document.createElement("div");
-
-    reviewCard.classList.add("review-card");
-
-    reviewCard.innerHTML = `
-        <h3>${name}</h3>
-        <p>${review}</p>
-    `;
-
-    reviewList.appendChild(reviewCard);
-
-    reviewForm.reset();
-
+/* ===== HEADER SCROLL EFFECT ===== */
+const header = document.getElementById('header');
+window.addEventListener('scroll', () => {
+  header.classList.toggle('scrolled', window.scrollY > 50);
 });
 
-/* ================= SHOPPING CART ================= */
+/* ===== MOBILE MENU ===== */
+const menuToggle = document.getElementById('menuToggle');
+const mobileMenu = document.getElementById('mobileMenu');
 
-const cartIcon =
-document.querySelector(".fa-cart-shopping");
-
-const cartSidebar =
-document.getElementById("cartSidebar");
-
-const closeCart =
-document.getElementById("closeCart");
-
-const addCartButtons =
-document.querySelectorAll(".add-cart");
-
-const cartItems =
-document.getElementById("cartItems");
-
-const cartTotal =
-document.getElementById("cartTotal");
-
-let total = 0;
-
-/* OPEN CART */
-
-cartIcon.addEventListener("click", () => {
-    cartSidebar.classList.add("active");
+menuToggle.addEventListener('click', () => {
+  menuToggle.classList.toggle('active');
+  mobileMenu.classList.toggle('open');
+  document.body.style.overflow = mobileMenu.classList.contains('open') ? 'hidden' : '';
 });
 
-/* CLOSE CART */
-
-closeCart.addEventListener("click", () => {
-    cartSidebar.classList.remove("active");
+mobileMenu.querySelectorAll('a').forEach(link => {
+  link.addEventListener('click', () => {
+    menuToggle.classList.remove('active');
+    mobileMenu.classList.remove('open');
+    document.body.style.overflow = '';
+  });
 });
 
-/* ADD PRODUCTS */
+/* ===== CART ===== */
+const cartSidebar   = document.getElementById('cartSidebar');
+const cartOverlay   = document.getElementById('cartOverlay');
+const closeCartBtn  = document.getElementById('closeCart');
+const cartItemsEl   = document.getElementById('cartItems');
+const cartTotalEl   = document.getElementById('cartTotal');
+const cartBadge     = document.getElementById('cartBadge');
 
-addCartButtons.forEach(button => {
+let cart = [];
 
-    button.addEventListener("click", () => {
+function openCart() {
+  cartSidebar.classList.add('active');
+  cartOverlay.classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+function closeCart() {
+  cartSidebar.classList.remove('active');
+  cartOverlay.classList.remove('active');
+  document.body.style.overflow = '';
+}
 
-        const name =
-        button.getAttribute("data-name");
+document.querySelectorAll('.cart-trigger').forEach(btn => {
+  btn.addEventListener('click', openCart);
+});
+closeCartBtn.addEventListener('click', closeCart);
+cartOverlay.addEventListener('click', closeCart);
 
-        const price =
-        button.getAttribute("data-price");
+function renderCart() {
+  const total = cart.reduce((sum, item) => sum + item.price * item.qty, 0);
+  cartTotalEl.textContent = total;
+  cartBadge.textContent = cart.reduce((sum, i) => sum + i.qty, 0);
+  cartBadge.setAttribute('data-count', cart.length === 0 ? '0' : '1');
 
-        total += Number(price);
+  if (cart.length === 0) {
+    cartItemsEl.innerHTML = '<p class="cart-empty">Your cart is empty</p>';
+    return;
+  }
 
-        cartTotal.innerText = total;
+  cartItemsEl.innerHTML = cart.map((item, idx) => `
+    <div class="cart-item">
+      <p>${item.name} ${item.qty > 1 ? `<small>×${item.qty}</small>` : ''}</p>
+      <span>₦${item.price * item.qty}</span>
+      <button class="cart-item-remove" data-idx="${idx}" aria-label="Remove item">
+        <i class="fa-solid fa-trash-can"></i>
+      </button>
+    </div>
+  `).join('');
 
-        const cartItem =
-        document.createElement("div");
-
-        cartItem.classList.add("cart-item");
-
-        cartItem.innerHTML = `
-            <p>${name}</p>
-            <span>$${price}</span>
-        `;
-
-        cartItems.appendChild(cartItem);
-
-        cartSidebar.classList.add("active");
-
+  cartItemsEl.querySelectorAll('.cart-item-remove').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const idx = parseInt(btn.dataset.idx);
+      cart.splice(idx, 1);
+      renderCart();
     });
+  });
+}
 
+function addToCart(name, price) {
+  const existing = cart.find(i => i.name === name);
+  if (existing) {
+    existing.qty++;
+  } else {
+    cart.push({ name, price: Number(price), qty: 1 });
+  }
+  renderCart();
+  showToast(`${name} added to cart ✓`);
+}
+
+document.querySelectorAll('.add-cart').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const name  = btn.dataset.name;
+    const price = btn.dataset.price;
+    addToCart(name, price);
+  });
+});
+
+/* ===== STAR RATING ===== */
+const stars       = document.querySelectorAll('#starRating i');
+const starsInput  = document.getElementById('reviewStars');
+let currentRating = 0;
+
+stars.forEach(star => {
+  star.addEventListener('mouseenter', () => {
+    const val = parseInt(star.dataset.val);
+    stars.forEach((s, i) => {
+      s.classList.toggle('active', i < val);
+      s.classList.toggle('fa-solid', i < val);
+      s.classList.toggle('fa-regular', i >= val);
+    });
+  });
+  star.addEventListener('mouseleave', () => {
+    stars.forEach((s, i) => {
+      s.classList.toggle('active', i < currentRating);
+      s.classList.toggle('fa-solid', i < currentRating);
+      s.classList.toggle('fa-regular', i >= currentRating);
+    });
+  });
+  star.addEventListener('click', () => {
+    currentRating = parseInt(star.dataset.val);
+    starsInput.value = currentRating;
+  });
+});
+
+/* ===== REVIEW FORM ===== */
+const reviewForm = document.getElementById('reviewForm');
+const reviewList = document.getElementById('reviewList');
+
+reviewForm.addEventListener('submit', e => {
+  e.preventDefault();
+  const name  = document.getElementById('reviewName').value.trim();
+  const text  = document.getElementById('reviewText').value.trim();
+  const rating = parseInt(starsInput.value) || 5;
+
+  if (!name || !text) return;
+
+  const starsHtml = '★'.repeat(rating) + '☆'.repeat(5 - rating);
+  const initial   = name.charAt(0).toUpperCase();
+
+  const card = document.createElement('div');
+  card.classList.add('review-card');
+  card.innerHTML = `
+    <div class="review-top">
+      <div class="review-avatar">${initial}</div>
+      <div>
+        <strong>${escapeHtml(name)}</strong>
+        <div class="stars">${starsHtml}</div>
+      </div>
+    </div>
+    <p>${escapeHtml(text)}</p>
+  `;
+
+  // Insert at top
+  reviewList.insertBefore(card, reviewList.firstChild);
+
+  reviewForm.reset();
+  currentRating = 0;
+  stars.forEach(s => { s.classList.remove('active'); s.classList.add('fa-regular'); s.classList.remove('fa-solid'); });
+  starsInput.value = 0;
+
+  showToast('Review submitted — thank you!');
+});
+
+/* ===== APPOINTMENT FORM ===== */
+const appointmentForm = document.getElementById('appointmentForm');
+if (appointmentForm) {
+  appointmentForm.addEventListener('submit', e => {
+    e.preventDefault();
+    showToast('Appointment request sent! We\'ll confirm shortly.');
+    appointmentForm.reset();
+  });
+}
+
+
+/* ===== CHECKOUT ===== */
+const checkoutBtn = document.querySelector('.checkout-btn');
+
+checkoutBtn.addEventListener('click', () => {
+  if (cart.length === 0) {
+    showToast('Your cart is empty!');
+    return;
+  }
+  openCheckoutModal();
+});
+
+function openCheckoutModal() {
+  document.getElementById('checkoutModal')?.remove();
+
+  const total = cart.reduce((sum, i) => sum + i.price * i.qty, 0);
+
+  const modal = document.createElement('div');
+  modal.id = 'checkoutModal';
+  modal.innerHTML = `
+    <div class="co-backdrop"></div>
+    <div class="co-box">
+      <button class="co-close" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
+
+      <div class="co-step" id="coStep1">
+        <h2 class="co-title">Order Summary</h2>
+        <ul class="co-items">
+          ${cart.map(i => `
+            <li>
+              <span>${i.name} ${i.qty > 1 ? `<em>x${i.qty}</em>` : ''}</span>
+              <span>&#8358;${i.price * i.qty}</span>
+            </li>`).join('')}
+        </ul>
+        <div class="co-total">
+          <span>Total</span>
+          <strong>&#8358;${total}</strong>
+        </div>
+        <h3 class="co-sub">Your Details</h3>
+        <div class="co-form">
+          <div class="co-field">
+            <label>Full Name</label>
+            <input type="text" id="coName" placeholder="e.g. Amara Johnson" required>
+          </div>
+          <div class="co-field">
+            <label>Phone Number</label>
+            <input type="tel" id="coPhone" placeholder="+234 800 000 0000" required>
+          </div>
+          <div class="co-field">
+            <label>Delivery Address</label>
+            <input type="text" id="coAddress" placeholder="Street, City" required>
+          </div>
+          <div class="co-field">
+            <label>Payment Method</label>
+            <select id="coPayment">
+              <option value="transfer">Bank Transfer</option>
+              <option value="cash">Cash on Delivery</option>
+              <option value="pos">POS on Delivery</option>
+            </select>
+          </div>
+        </div>
+        <button class="co-confirm-btn" id="coPlaceBtn">Place Order</button>
+      </div>
+
+      <div class="co-step co-hidden" id="coStep2">
+        <div class="co-success-icon"><i class="fa-solid fa-circle-check"></i></div>
+        <h2 class="co-title">Order Placed!</h2>
+        <p class="co-success-msg">Thank you! We have received your order and will contact you shortly to confirm.</p>
+        <div class="co-ref">Order ref: <strong id="coRef"></strong></div>
+        <button class="co-confirm-btn" id="coDoneBtn">Done</button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+  document.body.style.overflow = 'hidden';
+
+  requestAnimationFrame(() => modal.querySelector('.co-box').classList.add('co-open'));
+
+  function closeModal() {
+    modal.querySelector('.co-box').classList.remove('co-open');
+    setTimeout(() => { modal.remove(); document.body.style.overflow = ''; }, 320);
+  }
+  modal.querySelector('.co-close').addEventListener('click', closeModal);
+  modal.querySelector('.co-backdrop').addEventListener('click', closeModal);
+
+  modal.querySelector('#coPlaceBtn').addEventListener('click', () => {
+    const name    = document.getElementById('coName').value.trim();
+    const phone   = document.getElementById('coPhone').value.trim();
+    const address = document.getElementById('coAddress').value.trim();
+
+    if (!name || !phone || !address) {
+      showToast('Please fill in all fields.');
+      return;
+    }
+
+    document.getElementById('coStep1').classList.add('co-hidden');
+    document.getElementById('coStep2').classList.remove('co-hidden');
+    document.getElementById('coRef').textContent =
+      'FBH-' + Math.random().toString(36).substring(2, 8).toUpperCase();
+
+    cart = [];
+    renderCart();
+    closeCart();
+  });
+
+  modal.querySelector('#coDoneBtn').addEventListener('click', closeModal);
+}
+
+/* ===== TOAST ===== */
+function showToast(msg) {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 3000);
+}
+
+/* ===== UTILITY ===== */
+function escapeHtml(str) {
+  return str.replace(/[&<>"']/g, m => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[m]));
+}
+
+/* ===== SCROLL REVEAL (lightweight) ===== */
+const revealEls = document.querySelectorAll(
+  '.service-card, .product-card, .review-card, .contact-card'
+);
+const revealObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.style.opacity = '1';
+      entry.target.style.transform = 'translateY(0)';
+      revealObserver.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.12 });
+
+revealEls.forEach((el, i) => {
+  el.style.opacity = '0';
+  el.style.transform = 'translateY(28px)';
+  el.style.transition = `opacity .5s ease ${i * 0.07}s, transform .5s ease ${i * 0.07}s, box-shadow .35s ease, transform .35s ease`;
+  revealObserver.observe(el);
 });

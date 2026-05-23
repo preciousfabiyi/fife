@@ -1,51 +1,42 @@
-<!-- ========================= -->
-<!-- FILE: index.html -->
-<!-- ========================= -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Fife Beauty Hub & Spa</title>
-
-  <!-- FONT AWESOME -->
-  <link rel="stylesheet"
-  href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"/>
-
-  <!-- CSS -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles/styles.css"/>
   <link rel="stylesheet" href="styles/larger.css"/>
 </head>
-
-<!-- SHOPPING CART -->
-
-<div class="cart-sidebar" id="cartSidebar">
-
-    <div class="cart-header">
-        <h2>Shopping Cart</h2>
-
-        <span id="closeCart">&times;</span>
-    </div>
-
-    <div id="cartItems"></div>
-
-    <div class="cart-footer">
-        <h3>Total: $<span id="cartTotal">0</span></h3>
-
-        <button>Checkout</button>
-    </div>
-
-</div>
 <body>
 
-<!-- ================= HEADER ================= -->
-
-<header class="header">
-
-  <div class="logo">
-    <h1>Fife Beauty Hub & Spa</h1>
-    <img src="images/fife-logo.jpg" alt="Fife Beauty Hub & Spa Logo">
+<!-- ================= CART SIDEBAR ================= -->
+<div class="cart-sidebar" id="cartSidebar">
+  <div class="cart-header">
+    <h2>Your Cart</h2>
+    <span id="closeCart"><i class="fa-solid fa-xmark"></i></span>
   </div>
+  <div id="cartItems">
+    <p class="cart-empty">Your cart is empty</p>
+  </div>
+  <div class="cart-footer">
+    <div class="cart-total-row">
+      <span>Total</span>
+      <span>₦<span id="cartTotal">0</span></span>
+    </div>
+    <button class="checkout-btn">Proceed to Checkout</button>
+  </div>
+</div>
+<div class="cart-overlay" id="cartOverlay"></div>
+
+<!-- ================= HEADER ================= -->
+<header class="header" id="header">
+  <a href="#home" class="logo">
+    <img src="images/fife-logo.jpg" alt="Fife Beauty Hub & Spa Logo" class="logo-img">
+  </a>
 
   <nav class="navbar">
     <a href="#home">Home</a>
@@ -56,211 +47,284 @@
     <a href="#contact">Contact</a>
   </nav>
 
-  <div class="icons">
-    <i class="fa-solid fa-cart-shopping"></i>
-    <i class="fa-solid fa-user"></i>
+  <div class="header-icons">
+    <button class="icon-btn cart-trigger" aria-label="Open cart">
+      <i class="fa-solid fa-cart-shopping"></i>
+      <span class="cart-badge" id="cartBadge">0</span>
+    </button>
+    <a href="admin.html" class="icon-btn" aria-label="Admin">
+      <i class="fa-solid fa-user-shield"></i>
+    </a>
+    <button class="menu-toggle" id="menuToggle" aria-label="Toggle menu">
+      <span></span><span></span><span></span>
+    </button>
   </div>
-
 </header>
 
-<!-- ================= HERO SECTION ================= -->
+<!-- Mobile Menu -->
+<div class="mobile-menu" id="mobileMenu">
+  <a href="#home">Home</a>
+  <a href="#services">Services</a>
+  <a href="#products">Products</a>
+  <a href="#reviews">Reviews</a>
+  <a href="#appointment">Appointment</a>
+  <a href="#contact">Contact</a>
+</div>
 
-
-<section class="hero">
-    <div class="hero-content">
-        <h1>Glow Naturally With Confidence</h1>
-
-        <p>
-            Luxury Pedicure, Facials, Skin Care &
-            Professional Beauty Consultation
-            For All Body Types.
-        </p>
-
-        <a href="#" class="book-btn">
-            Book Appointment
-        </a>
+<!-- ================= HERO ================= -->
+<section class="hero" id="home">
+  <div class="hero-overlay"></div>
+  <div class="hero-content">
+    <span class="hero-tag">Premium Beauty & Wellness</span>
+    <h1>Glow Naturally<br><em>With Confidence</em></h1>
+    <p>Luxury Pedicure, Facials, Skin Care &amp; Professional Beauty Consultation for All Body Types.</p>
+    <div class="hero-btns">
+      <a href="#appointment" class="btn btn-primary">Book Appointment</a>
+      <a href="#services" class="btn btn-outline">Our Services</a>
     </div>
-</section>
-<!-- ================= SERVICES ================= -->
-
-<section class="services" id="services">
-
-  <h2 class="title">Our Services</h2>
-
-  <div class="service-container">
-
-    <div class="service-card">
-      <i class="fa-solid fa-spa"></i>
-      <h3>Facial Treatment</h3>
-      <p>Professional facial care and glowing skin therapy.</p>
-    </div>
-
-    <div class="service-card">
-      <i class="fa-solid fa-hand-sparkles"></i>
-      <h3>Luxury Pedicure</h3>
-      <p>Premium nail and foot care treatment.</p>
-    </div>
-
-    <div class="service-card">
-      <i class="fa-solid fa-heart"></i>
-      <h3>Skin Consultation</h3>
-      <p>Consultation for all body and skin types.</p>
-    </div>
-
   </div>
+  <div class="hero-scroll">
+    <span>Scroll</span>
+    <div class="scroll-line"></div>
+  </div>
+</section>
 
+<!-- ================= SERVICES ================= -->
+<section class="services" id="services">
+  <div class="section-label">What We Offer</div>
+  <h2 class="section-title">Our Services</h2>
+  <p class="section-subtitle">Tailored treatments designed to restore, refresh, and celebrate your natural beauty.</p>
+
+  <div class="service-grid">
+    <div class="service-card">
+      <div class="service-icon"><i class="fa-solid fa-spa"></i></div>
+      <h3>Facial Treatment</h3>
+      <p>Professional facial care and glowing skin therapy tailored to your unique skin type.</p>
+      <a href="#appointment" class="service-link">Book now <i class="fa-solid fa-arrow-right"></i></a>
+    </div>
+    <div class="service-card featured">
+      <div class="service-icon"><i class="fa-solid fa-hand-sparkles"></i></div>
+      <h3>Luxury Pedicure</h3>
+      <p>Premium nail and foot care treatment using only the finest products for lasting results.</p>
+      <a href="#appointment" class="service-link">Book now <i class="fa-solid fa-arrow-right"></i></a>
+    </div>
+    <div class="service-card">
+      <div class="service-icon"><i class="fa-solid fa-heart"></i></div>
+      <h3>Skin Consultation</h3>
+      <p>Expert consultation and personalized care plans for all skin and body types.</p>
+      <a href="#appointment" class="service-link">Book now <i class="fa-solid fa-arrow-right"></i></a>
+    </div>
+  </div>
 </section>
 
 <!-- ================= PRODUCTS ================= -->
-
 <section class="products" id="products">
+  <div class="section-label">Shop</div>
+  <h2 class="section-title">Featured Products</h2>
+  <p class="section-subtitle">Curated beauty essentials to extend your spa experience at home.</p>
 
-  <h2 class="title">Featured Products</h2>
-
-  <div class="product-container">
-
+  <div class="product-grid" id="productGrid">
     <!-- PRODUCT 1 -->
     <div class="product-card">
-
       <div class="product-image">
-        <img src="https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?q=80&w=1200&auto=format&fit=crop" alt="">
+        <img src="https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?q=80&w=800&auto=format&fit=crop" alt="Skin Glow Cream">
+        <div class="product-overlay">
+          <button class="btn-quick-add add-cart" data-name="Skin Glow Cream" data-price="25">Quick Add</button>
+        </div>
       </div>
-
-      <button class="add-cart"
-data-name="Skin Glow Cream"
-data-price="25">
-
-Add To Cart
-
-</button>
-
-        <button>Add To Cart</button>
+      <div class="product-info">
+        <h3>Skin Glow Cream</h3>
+        <p class="product-price">₦25</p>
+        <button class="btn btn-primary add-cart" data-name="Skin Glow Cream" data-price="25">Add To Cart</button>
       </div>
-
     </div>
 
     <!-- PRODUCT 2 -->
     <div class="product-card">
-
       <div class="product-image">
-        <img src="https://images.unsplash.com/photo-1515377905703-c4788e51af15?q=80&w=1200&auto=format&fit=crop" alt="">
+        <img src="https://images.unsplash.com/photo-1515377905703-c4788e51af15?q=80&w=800&auto=format&fit=crop" alt="Facial Care Kit">
+        <div class="product-overlay">
+          <button class="btn-quick-add add-cart" data-name="Facial Care Kit" data-price="40">Quick Add</button>
+        </div>
       </div>
-
       <div class="product-info">
         <h3>Facial Care Kit</h3>
-        <p>$40</p>
-
-        <button>Add To Cart</button>
+        <p class="product-price">₦40</p>
+        <button class="btn btn-primary add-cart" data-name="Facial Care Kit" data-price="40">Add To Cart</button>
       </div>
-
     </div>
 
     <!-- PRODUCT 3 -->
     <div class="product-card">
-
       <div class="product-image">
-        <img src="https://images.unsplash.com/photo-1556228578-8c89e6adf883?q=80&w=1200&auto=format&fit=crop" alt="">
+        <img src="https://images.unsplash.com/photo-1556228578-8c89e6adf883?q=80&w=800&auto=format&fit=crop" alt="Body Lotion">
+        <div class="product-overlay">
+          <button class="btn-quick-add add-cart" data-name="Body Lotion" data-price="18">Quick Add</button>
+        </div>
       </div>
-
       <div class="product-info">
         <h3>Body Lotion</h3>
-        <p>$18</p>
-
-        <button>Add To Cart</button>
+        <p class="product-price">₦18</p>
+        <button class="btn btn-primary add-cart" data-name="Body Lotion" data-price="18">Add To Cart</button>
       </div>
-
     </div>
-
   </div>
-
 </section>
 
 <!-- ================= REVIEWS ================= -->
-
 <section class="reviews" id="reviews">
+  <div class="section-label">Testimonials</div>
+  <h2 class="section-title">Customer Reviews</h2>
+  <p class="section-subtitle">Hear what our clients have to say about their experience.</p>
 
-  <h2 class="title">Customer Reviews</h2>
+  <div class="review-layout">
+    <form id="reviewForm" class="review-form" novalidate>
+      <h3>Share Your Experience</h3>
+      <div class="form-group">
+        <label for="reviewName">Your Name</label>
+        <input type="text" id="reviewName" placeholder="e.g. Amara Johnson" required>
+      </div>
+      <div class="form-group">
+        <label for="reviewStars">Rating</label>
+        <div class="star-rating" id="starRating">
+          <i class="fa-star fa-regular" data-val="1"></i>
+          <i class="fa-star fa-regular" data-val="2"></i>
+          <i class="fa-star fa-regular" data-val="3"></i>
+          <i class="fa-star fa-regular" data-val="4"></i>
+          <i class="fa-star fa-regular" data-val="5"></i>
+        </div>
+        <input type="hidden" id="reviewStars" value="0">
+      </div>
+      <div class="form-group">
+        <label for="reviewText">Your Review</label>
+        <textarea id="reviewText" placeholder="Tell us about your experience…" required></textarea>
+      </div>
+      <button type="submit" class="btn btn-primary">Submit Review</button>
+    </form>
 
-  <form id="reviewForm">
-
-    <input type="text" id="name"
-    placeholder="Your Name" required>
-
-    <textarea id="review"
-    placeholder="Write Your Review"
-    required></textarea>
-
-    <button type="submit">Submit Review</button>
-
-  </form>
-
-  <div id="reviewList"></div>
-
+    <div id="reviewList">
+      <!-- Seed reviews -->
+      <div class="review-card">
+        <div class="review-top">
+          <div class="review-avatar">A</div>
+          <div>
+            <strong>Adaeze O.</strong>
+            <div class="stars">★★★★★</div>
+          </div>
+        </div>
+        <p>Absolutely incredible experience! My skin has never felt this radiant. I'll be back every month.</p>
+      </div>
+      <div class="review-card">
+        <div class="review-top">
+          <div class="review-avatar">F</div>
+          <div>
+            <strong>Fatima B.</strong>
+            <div class="stars">★★★★★</div>
+          </div>
+        </div>
+        <p>The luxury pedicure was heaven. The staff are so professional and the ambiance is beautiful.</p>
+      </div>
+    </div>
+  </div>
 </section>
 
 <!-- ================= APPOINTMENT ================= -->
-
 <section class="appointment" id="appointment">
-
-  <h2 class="title">Book Appointment</h2>
-
-  <form class="appointment-form">
-
-    <input type="text"
-    placeholder="Full Name" required>
-
-    <input type="email"
-    placeholder="Email Address" required>
-
-    <input type="date" required>
-
-    <select required>
-      <option>Select Service</option>
-      <option>Facial Treatment</option>
-      <option>Luxury Pedicure</option>
-      <option>Skin Consultation</option>
-    </select>
-
-    <textarea placeholder="Additional Information"></textarea>
-
-    <button type="submit">Book Now</button>
-
-  </form>
-
+  <div class="appointment-inner">
+    <div class="appt-info">
+      <div class="section-label light">Book Now</div>
+      <h2 class="section-title light">Reserve Your<br><em>Experience</em></h2>
+      <ul class="appt-perks">
+        <li><i class="fa-solid fa-check"></i> Instant confirmation</li>
+        <li><i class="fa-solid fa-check"></i> Free cancellation 24 hrs prior</li>
+        <li><i class="fa-solid fa-check"></i> Expert beauticians</li>
+        <li><i class="fa-solid fa-check"></i> Complimentary consultation</li>
+      </ul>
+    </div>
+    <form class="appointment-form" id="appointmentForm" novalidate>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Full Name</label>
+          <input type="text" placeholder="Your full name" required>
+        </div>
+        <div class="form-group">
+          <label>Email Address</label>
+          <input type="email" placeholder="your@email.com" required>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Preferred Date</label>
+          <input type="date" required>
+        </div>
+        <div class="form-group">
+          <label>Service</label>
+          <select required>
+            <option value="" disabled selected>Select a service</option>
+            <option>Facial Treatment</option>
+            <option>Luxury Pedicure</option>
+            <option>Skin Consultation</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Additional Information</label>
+        <textarea placeholder="Any special requests or notes…"></textarea>
+      </div>
+      <button type="submit" class="btn btn-primary">Book My Appointment</button>
+    </form>
+  </div>
 </section>
 
 <!-- ================= CONTACT ================= -->
-
 <section class="contact" id="contact">
+  <div class="section-label">Get In Touch</div>
+  <h2 class="section-title">Contact Us</h2>
 
-  <h2 class="title">Contact Us</h2>
-
-  <div class="contact-box">
-
-    <p><i class="fa-solid fa-location-dot"></i> Ilorin, Nigeria</p>
-
-    <p><i class="fa-solid fa-phone"></i> +234 9165028766</p>
-
-    <p><i class="fa-solid fa-envelope"></i>
-       victoriaayomide32@gmail.com
-    </p>
-
+  <div class="contact-grid">
+    <div class="contact-card">
+      <div class="contact-icon"><i class="fa-solid fa-location-dot"></i></div>
+      <h4>Location</h4>
+      <p>Ilorin, Nigeria</p>
+    </div>
+    <div class="contact-card">
+      <div class="contact-icon"><i class="fa-solid fa-phone"></i></div>
+      <h4>Phone</h4>
+      <p>+234 916 502 8766</p>
+    </div>
+    <div class="contact-card">
+      <div class="contact-icon"><i class="fa-solid fa-envelope"></i></div>
+      <h4>Email</h4>
+      <p>victoriaayomide32@gmail.com</p>
+    </div>
+    <div class="contact-card">
+      <div class="contact-icon"><i class="fa-solid fa-clock"></i></div>
+      <h4>Hours</h4>
+      <p>Mon–Sat: 9am – 7pm</p>
+    </div>
   </div>
 
+  <div class="social-links">
+    <a href="https://www.Instagram.com/fifeeh_1?igsh=MWRyNWZwa2N5NW5hZg%3D&utm_source=gr" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>
+    <a href="https://snapchat.com/t/bxuOrRex" aria-label="Snapchat"><i class="fa-brands fa-snapchat"></i></a>
+    <a href="https://wa.me/2349165028766" aria-label="WhatsApp"><i class="fa-brands fa-whatsapp"></i></a>
+  </div>
 </section>
 
 <!-- ================= FOOTER ================= -->
-
 <footer>
-
-  <p>
-    © 2026 Fife Beauty Hub & Spa |
-    All Rights Reserved
-  </p>
-
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <img src="fife-logo.jpg" alt="Fife Beauty Hub & Spa" class="footer-logo-img">
+    </div>
+    <p>© 2026 Fife Beauty Hub &amp; Spa · All Rights Reserved</p>
+    <a href="admin.html" class="footer-admin">Admin Portal</a>
+  </div>
 </footer>
 
-<script src="scripts/main.js"></script>
+<!-- Toast notification -->
+<div class="toast" id="toast"></div>
 
+<script src="scripts/main.js"></script>
 </body>
 </html>
