@@ -69,6 +69,34 @@ logoutBtn.addEventListener('click', () => {
   document.getElementById('loginPass').value = '';
 });
 
+/* ===== MOBILE SIDEBAR TOGGLE ===== */
+const sidebarToggle  = document.getElementById('sidebarToggle');
+const sidebarOverlay = document.getElementById('sidebarOverlay');
+const adminSidebar   = document.querySelector('.admin-sidebar');
+
+function openSidebar() {
+  adminSidebar.classList.add('open');
+  sidebarOverlay.classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+function closeSidebar() {
+  adminSidebar.classList.remove('open');
+  sidebarOverlay.classList.remove('active');
+  document.body.style.overflow = '';
+}
+
+sidebarToggle.addEventListener('click', () => {
+  adminSidebar.classList.contains('open') ? closeSidebar() : openSidebar();
+});
+sidebarOverlay.addEventListener('click', closeSidebar);
+
+// Close sidebar when a nav link is tapped on mobile
+document.querySelectorAll('.sidebar-nav a[data-tab]').forEach(link => {
+  link.addEventListener('click', () => {
+    if (window.innerWidth < 900) closeSidebar();
+  });
+});
+
 togglePass.addEventListener('click', () => {
   const passInput = document.getElementById('loginPass');
   const isText = passInput.type === 'text';

@@ -415,6 +415,40 @@ function escapeHtml(str) {
   return str.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 }
 
+/* ===== LOAD PRODUCTS FROM ADMIN (localStorage) ===== */
+function loadAdminProducts() {
+  const productGrid = document.getElementById('productGrid');
+  if (!productGrid) return;
+
+  const products = JSON.parse(localStorage.getItem('fifeProducts') || '[]');
+  if (products.length === 0) return;
+
+  const html = products.map(p => `
+    <div class="product-card">
+      <div class="product-image">
+        <img src="${p.image}" alt="${p.name}" onerror="this.src='https://placehold.co/400x300?text=No+Image'">
+        <div class="product-overlay">
+          <button class="btn-quick-add add-cart" data-name="${p.name}" data-price="${p.price}">Quick Add</button>
+        </div>
+      </div>
+      <div class="product-info">
+        <h3>${p.name}</h3>
+        <p class="product-price">₦${p.price}</p>
+        <button class="btn btn-primary add-cart" data-name="${p.name}" data-price="${p.price}">Add To Cart</button>
+      </div>
+    </div>
+  `).join('');
+
+  productGrid.innerHTML = html;
+
+  // Attach cart listeners to the newly rendered buttons
+  productGrid.querySelectorAll('.add-cart').forEach(btn => {
+    btn.addEventListener('click', () => addToCart(btn.dataset.name, btn.dataset.price));
+  });
+}
+
+loadAdminProducts();
+
 /* ===== SCROLL REVEAL ===== */
 const revealEls = document.querySelectorAll('.service-card, .product-card, .review-card, .contact-card');
 const revealObserver = new IntersectionObserver(entries => {
