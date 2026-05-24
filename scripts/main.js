@@ -415,36 +415,73 @@ function escapeHtml(str) {
   return str.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 }
 
-/* ===== LOAD PRODUCTS FROM ADMIN (localStorage) ===== */
-function loadAdminProducts() {
+/* ===== FIREBASE CONFIG ===== */
+// 1. Go to https://console.firebase.google.com
+// 2. Create a project → Add a Web App → Copy your config here
+// 3. Go to Firestore Database → Create database → Start in test mode
+const FIREBASE_CONFIG = {
+  apiKey:            "YOUR_API_KEY",
+  authDomain:        "YOUR_PROJECT.firebaseapp.com",
+  projectId:         "YOUR_PROJECT_ID",
+  storageBucket:     "YOUR_PROJECT.appspot.com",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId:             "YOUR_APP_ID"
+};
+
+/* ===== LOAD PRODUCTS FROM FIRESTORE ===== */
+async function loadAdminProducts() {
   const productGrid = document.getElementById('productGrid');
   if (!productGrid) return;
 
-  const products = JSON.parse(localStorage.getItem('fifeProducts') || '[]');
-  if (products.length === 0) return;
+  // Show loading state
+  productGrid.innerHTML = '<p style="text-align:center;color:#8a6b78;padding:32px;">Loading products…</p>';
 
-  const html = products.map(p => `
-    <div class="product-card">
-      <div class="product-image">
-        <img src="${p.image}" alt="${p.name}" onerror="this.src='https://placehold.co/400x300?text=No+Image'">
-        <div class="product-overlay">
-          <button class="btn-quick-add add-cart" data-name="${p.name}" data-price="${p.price}">Quick Add</button>
+  try {
+    // Dynamically load Firebase SDKs
+    const { initializeApp }    = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js');
+    const { getFirestore, collection, getDocs, orderBy, query }
+                               = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+
+    const app = initializeApp(FIREBASE_CONFIG);
+    const db  = getFirestore(app);
+
+    const q        = query(collection(db, 'products'), orderBy('createdAt', 'desc'));
+    const snapshot = await getDocs(q);
+
+    if (snapshot.empty) {
+      productGrid.innerHTML = '';
+      return;
+    }
+
+    const html = snapshot.docs.map(doc => {
+      const p = doc.data();
+      return `
+        <div class="product-card">
+          <div class="product-image">
+            <img src="${p.image}" alt="${p.name}" onerror="this.src='https://placehold.co/400x300?text=No+Image'">
+            <div class="product-overlay">
+              <button class="btn-quick-add add-cart" data-name="${p.name}" data-price="${p.price}">Quick Add</button>
+            </div>
+          </div>
+          <div class="product-info">
+            <h3>${p.name}</h3>
+            <p class="product-price">₦${p.price}</p>
+            <button class="btn btn-primary add-cart" data-name="${p.name}" data-price="${p.price}">Add To Cart</button>
+          </div>
         </div>
-      </div>
-      <div class="product-info">
-        <h3>${p.name}</h3>
-        <p class="product-price">₦${p.price}</p>
-        <button class="btn btn-primary add-cart" data-name="${p.name}" data-price="${p.price}">Add To Cart</button>
-      </div>
-    </div>
-  `).join('');
+      `;
+    }).join('');
 
-  productGrid.innerHTML = html;
+    productGrid.innerHTML = html;
 
-  // Attach cart listeners to the newly rendered buttons
-  productGrid.querySelectorAll('.add-cart').forEach(btn => {
-    btn.addEventListener('click', () => addToCart(btn.dataset.name, btn.dataset.price));
-  });
+    productGrid.querySelectorAll('.add-cart').forEach(btn => {
+      btn.addEventListener('click', () => addToCart(btn.dataset.name, btn.dataset.price));
+    });
+
+  } catch (err) {
+    console.error('Failed to load products:', err);
+    productGrid.innerHTML = '<p style="text-align:center;color:#c0392b;padding:32px;">Could not load products. Please check your Firebase config.</p>';
+  }
 }
 
 loadAdminProducts();

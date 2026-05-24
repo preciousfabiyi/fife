@@ -4,13 +4,36 @@
              tab navigation, delete with confirm
 ============================================ */
 
+/* ===== FIREBASE CONFIG ===== */
+// Must match the config in main.js exactly
+const FIREBASE_CONFIG = {
+  apiKey:            "YOUR_API_KEY",
+  authDomain:        "YOUR_PROJECT.firebaseapp.com",
+  projectId:         "YOUR_PROJECT_ID",
+  storageBucket:     "YOUR_PROJECT.appspot.com",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId:             "YOUR_APP_ID"
+};
+
 /* ===== CREDENTIALS (change these) ===== */
 const ADMIN_USER = 'fifeadmin';
 const ADMIN_PASS = 'fife2026';
 
+/* ===== FIREBASE STATE ===== */
+let db          = null;
+let fbApp       = null;
+let fbProducts  = []; // local cache of Firestore docs {id, ...data}
+
+/* ===== Init Firebase ===== */
+async function initFirebase() {
+  const { initializeApp }    = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js');
+  const { getFirestore }     = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+  fbApp = initializeApp(FIREBASE_CONFIG);
+  db    = getFirestore(fbApp);
+}
+
 /* ===== STATE ===== */
-let products        = JSON.parse(localStorage.getItem('fifeProducts') || '[]');
-let pendingDeleteIdx = null;
+let pendingDeleteId  = null;
 let imageBase64      = null;
 
 /* ===== ELEMENTS ===== */
@@ -107,8 +130,10 @@ togglePass.addEventListener('click', () => {
 function showDashboard() {
   loginScreen.classList.add('hidden');
   adminDashboard.classList.remove('hidden');
-  renderProducts();
-  updateCount();
+  initFirebase().then(() => {
+    loadProducts();
+    updateCount();
+  });
 }
 
 /* ===== TABS ===== */
@@ -129,7 +154,7 @@ document.querySelectorAll('.sidebar-nav a[data-tab]').forEach(link => {
     } else {
       document.getElementById('tabManageProducts').classList.remove('hidden');
       document.getElementById('tabTitle').textContent = 'Manage Products';
-      renderProducts();
+      loadProducts();
     }
   });
 });
@@ -182,7 +207,7 @@ removeImgBtn.addEventListener('click', e => {
 });
 
 /* ===== ADD PRODUCT ===== */
-productForm.addEventListener('submit', e => {
+productForm.addEventListener('submit', async e => {
   e.preventDefault();
 
   const name     = document.getElementById('productName').value.trim();
@@ -192,25 +217,61 @@ productForm.addEventListener('submit', e => {
   if (!name || !price) { showToast('Please fill in all required fields.'); return; }
   if (!imageBase64)    { showToast('Please upload a product image.');     return; }
 
-  products.unshift({ name, price: Number(price), image: imageBase64, category: category || 'General' });
-  saveProducts();
-  updateCount();
+  const submitBtn = productForm.querySelector('.btn-upload');
+  submitBtn.disabled = true;
+  submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Uploading…';
 
-  // Reset form
-  productForm.reset();
-  imageBase64 = null;
-  previewImg.src = '';
-  imagePreviewEl.classList.add('hidden');
-  uploadPlaceholder.classList.remove('hidden');
+  try {
+    const { collection, addDoc, serverTimestamp } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+    await addDoc(collection(db, 'products'), {
+      name,
+      price: Number(price),
+      image: imageBase64,
+      category: category || 'General',
+      createdAt: serverTimestamp()
+    });
 
-  showToast(`"${name}" added successfully!`);
+    // Reset form
+    productForm.reset();
+    imageBase64 = null;
+    previewImg.src = '';
+    imagePreviewEl.classList.add('hidden');
+    uploadPlaceholder.classList.remove('hidden');
+
+    showToast(`"${name}" added successfully!`);
+    loadProducts();
+
+  } catch (err) {
+    console.error(err);
+    showToast('Upload failed. Check your Firebase config.');
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.innerHTML = '<i class="fa-solid fa-upload"></i> Upload Product';
+  }
 });
 
-/* ===== RENDER PRODUCTS ===== */
+/* ===== LOAD & RENDER PRODUCTS FROM FIRESTORE ===== */
+async function loadProducts(filter = '') {
+  adminProductsEl.innerHTML = '<p class="empty-msg">Loading…</p>';
+
+  try {
+    const { collection, getDocs, orderBy, query } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+    const q        = query(collection(db, 'products'), orderBy('createdAt', 'desc'));
+    const snapshot = await getDocs(q);
+
+    fbProducts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    renderProducts(filter);
+    updateCount();
+  } catch (err) {
+    console.error(err);
+    adminProductsEl.innerHTML = '<p class="empty-msg" style="color:#c0392b;">Failed to load products. Check Firebase config.</p>';
+  }
+}
+
 function renderProducts(filter = '') {
   const filtered = filter
-    ? products.filter(p => p.name.toLowerCase().includes(filter.toLowerCase()) || (p.category||'').toLowerCase().includes(filter.toLowerCase()))
-    : products;
+    ? fbProducts.filter(p => p.name.toLowerCase().includes(filter.toLowerCase()) || (p.category||'').toLowerCase().includes(filter.toLowerCase()))
+    : fbProducts;
 
   const n = filtered.length;
   if (manageCountEl) manageCountEl.textContent = `${n} product${n !== 1 ? 's' : ''}`;
@@ -220,31 +281,29 @@ function renderProducts(filter = '') {
     return;
   }
 
-  adminProductsEl.innerHTML = filtered.map((p, idx) => {
-    const realIdx = products.indexOf(p);
-    return `
-      <div class="admin-product">
-        <div class="admin-product-img-wrap">
-          <img src="${p.image}" alt="${p.name}" onerror="this.src='https://placehold.co/400x300?text=No+Image'">
-          <span class="product-category-badge">${p.category || 'General'}</span>
-        </div>
-        <div class="admin-product-info">
-          <h3>${p.name}</h3>
-          <p class="price">&#8358;${p.price}</p>
-        </div>
-        <div class="admin-product-actions">
-          <button class="btn-delete-product" data-idx="${realIdx}" aria-label="Delete ${p.name}">
-            <i class="fa-solid fa-trash-can"></i> Delete
-          </button>
-        </div>
+  adminProductsEl.innerHTML = filtered.map(p => `
+    <div class="admin-product">
+      <div class="admin-product-img-wrap">
+        <img src="${p.image}" alt="${p.name}" onerror="this.src='https://placehold.co/400x300?text=No+Image'">
+        <span class="product-category-badge">${p.category || 'General'}</span>
       </div>
-    `;
-  }).join('');
+      <div class="admin-product-info">
+        <h3>${p.name}</h3>
+        <p class="price">&#8358;${p.price}</p>
+      </div>
+      <div class="admin-product-actions">
+        <button class="btn-delete-product" data-id="${p.id}" aria-label="Delete ${p.name}">
+          <i class="fa-solid fa-trash-can"></i> Delete
+        </button>
+      </div>
+    </div>
+  `).join('');
 
   adminProductsEl.querySelectorAll('.btn-delete-product').forEach(btn => {
     btn.addEventListener('click', () => {
-      pendingDeleteIdx = parseInt(btn.dataset.idx);
-      delProductName.textContent = `"${products[pendingDeleteIdx].name}" will be permanently removed.`;
+      pendingDeleteId = btn.dataset.id;
+      const product = fbProducts.find(p => p.id === pendingDeleteId);
+      delProductName.textContent = `"${product?.name}" will be permanently removed.`;
       deleteModal.classList.remove('hidden');
     });
   });
@@ -258,35 +317,34 @@ if (searchInput) {
 /* ===== DELETE CONFIRM MODAL ===== */
 delCancel.addEventListener('click', () => {
   deleteModal.classList.add('hidden');
-  pendingDeleteIdx = null;
+  pendingDeleteId = null;
 });
 deleteModal.querySelector('.del-backdrop').addEventListener('click', () => {
   deleteModal.classList.add('hidden');
-  pendingDeleteIdx = null;
+  pendingDeleteId = null;
 });
-delConfirm.addEventListener('click', () => {
-  if (pendingDeleteIdx === null) return;
-  const name = products[pendingDeleteIdx].name;
-  products.splice(pendingDeleteIdx, 1);
-  saveProducts();
-  updateCount();
-  renderProducts(searchInput ? searchInput.value : '');
-  deleteModal.classList.add('hidden');
-  pendingDeleteIdx = null;
-  showToast(`"${name}" deleted.`);
+delConfirm.addEventListener('click', async () => {
+  if (!pendingDeleteId) return;
+
+  const product = fbProducts.find(p => p.id === pendingDeleteId);
+  const name    = product?.name || 'Product';
+
+  try {
+    const { doc, deleteDoc } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+    await deleteDoc(doc(db, 'products', pendingDeleteId));
+    showToast(`"${name}" deleted.`);
+    deleteModal.classList.add('hidden');
+    pendingDeleteId = null;
+    loadProducts(searchInput ? searchInput.value : '');
+  } catch (err) {
+    console.error(err);
+    showToast('Delete failed. Please try again.');
+  }
 });
 
 /* ===== HELPERS ===== */
-function saveProducts() {
-  try {
-    localStorage.setItem('fifeProducts', JSON.stringify(products));
-  } catch (e) {
-    showToast('Storage full — some images may not save. Try smaller images.');
-  }
-}
-
 function updateCount() {
-  const n = products.length;
+  const n = fbProducts.length;
   if (productCountEl) productCountEl.textContent = `${n} product${n !== 1 ? 's' : ''}`;
 }
 
