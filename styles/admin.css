@@ -591,8 +591,50 @@ button { font-family: inherit; cursor: pointer; }
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
 /* ============ RESPONSIVE ============ */
+
+/* Sidebar toggle button — hidden on desktop */
+.sidebar-toggle {
+  display: none;
+  background: none;
+  border: none;
+  font-size: 1.4rem;
+  color: var(--text);
+  cursor: pointer;
+  padding: 4px 10px;
+  margin-right: 8px;
+  line-height: 1;
+}
+
+/* Overlay that dims the page when sidebar is open on mobile */
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(26,16,20,.5);
+  z-index: 199;
+}
+.sidebar-overlay.active { display: block; }
+
 @media (max-width: 768px) {
-  .admin-sidebar { display: none; }
+  /* Sidebar becomes a slide-in drawer */
+  .admin-sidebar {
+    position: fixed;
+    left: -260px;
+    top: 0;
+    bottom: 0;
+    height: 100vh;
+    width: 240px;
+    z-index: 200;
+    transition: left 0.28s ease;
+    box-shadow: 4px 0 24px rgba(0,0,0,0.2);
+    overflow-y: auto;
+  }
+  .admin-sidebar.open { left: 0; }
+
+  /* Show hamburger button */
+  .sidebar-toggle { display: inline-flex; align-items: center; }
+
+  .admin-topbar { align-items: center; }
   .admin-main { padding: 24px 16px; }
   .form-row { grid-template-columns: 1fr; }
   .login-card { padding: 36px 24px; }
