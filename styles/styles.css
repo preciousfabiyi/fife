@@ -1,5 +1,4 @@
 
-
 /* ============================================
    FIFE BEAUTY HUB & SPA — Main Stylesheet
    Aesthetic: Editorial Luxury / Warm Cream & Rose
@@ -1176,4 +1175,34 @@ footer p {
 
 @media (max-width: 560px) {
   .co-box { padding: 28px 20px; margin: 0 12px; }
+}
+
+/* ===== DYNAMIC PRODUCT EXTRAS ===== */
+.no-products-msg {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--text-muted);
+}
+.no-products-msg i {
+  font-size: 3rem;
+  color: var(--rose-soft);
+  margin-bottom: 16px;
+  display: block;
+}
+.no-products-msg p {
+  font-size: 1rem;
+  color: var(--text-muted);
+}
+.product-category {
+  display: inline-block;
+  font-size: .7rem;
+  font-weight: 600;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--rose);
+  background: var(--rose-soft);
+  padding: 3px 10px;
+  border-radius: 50px;
+  margin-bottom: 8px;
 }

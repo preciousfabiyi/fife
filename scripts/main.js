@@ -1,4 +1,3 @@
-cat > /mnt/user-data/outputs/main.js << 'JSEOF'
 /* ============================================
    FIFE BEAUTY HUB & SPA — Main JS
 ============================================ */
@@ -29,7 +28,6 @@ menuToggle.addEventListener('click', () => {
   mobileMenu.classList.toggle('open');
   document.body.style.overflow = mobileMenu.classList.contains('open') ? 'hidden' : '';
 });
-
 mobileMenu.querySelectorAll('a').forEach(link => {
   link.addEventListener('click', () => {
     menuToggle.classList.remove('active');
@@ -74,7 +72,6 @@ function renderCart() {
     cartItemsEl.innerHTML = '<p class="cart-empty">Your cart is empty</p>';
     return;
   }
-
   cartItemsEl.innerHTML = cart.map((item, idx) => `
     <div class="cart-item">
       <p>${item.name}${item.qty > 1 ? ` <small>×${item.qty}</small>` : ''}</p>
@@ -101,9 +98,52 @@ function addToCart(name, price) {
   showToast(`${name} added to cart ✓`);
 }
 
-document.querySelectorAll('.add-cart').forEach(btn => {
-  btn.addEventListener('click', () => addToCart(btn.dataset.name, btn.dataset.price));
-});
+/* ===== LOAD PRODUCTS FROM ADMIN ===== */
+function loadProducts() {
+  const grid     = document.getElementById('productGrid');
+  const products = JSON.parse(localStorage.getItem('fifeProducts') || '[]');
+
+  if (products.length === 0) {
+    grid.innerHTML = `
+      <div class="no-products-msg">
+        <i class="fa-solid fa-box-open"></i>
+        <p>No products yet. Check back soon!</p>
+      </div>`;
+    return;
+  }
+
+  grid.innerHTML = products.map(p => `
+    <div class="product-card">
+      <div class="product-image">
+        <img src="${p.image}" alt="${p.name}" loading="lazy">
+        <div class="product-overlay">
+          <button class="btn-quick-add add-cart" data-name="${p.name}" data-price="${p.price}">Quick Add</button>
+        </div>
+      </div>
+      <div class="product-info">
+        ${p.category ? `<span class="product-category">${p.category}</span>` : ''}
+        <h3>${p.name}</h3>
+        <p class="product-price">₦${p.price}</p>
+        <button class="btn btn-primary add-cart" data-name="${p.name}" data-price="${p.price}">Add To Cart</button>
+      </div>
+    </div>
+  `).join('');
+
+  // Attach cart listeners to newly rendered buttons
+  grid.querySelectorAll('.add-cart').forEach(btn => {
+    btn.addEventListener('click', () => addToCart(btn.dataset.name, btn.dataset.price));
+  });
+
+  // Re-run scroll reveal on new cards
+  grid.querySelectorAll('.product-card').forEach((el, i) => {
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(28px)';
+    el.style.transition = `opacity .5s ease ${i * 0.07}s, transform .5s ease ${i * 0.07}s, box-shadow .35s ease`;
+    revealObserver.observe(el);
+  });
+}
+
+
 
 /* ===== STAR RATING ===== */
 const stars      = document.querySelectorAll('#starRating i');
@@ -141,9 +181,9 @@ reviewForm.addEventListener('submit', e => {
   const name   = document.getElementById('reviewName').value.trim();
   const text   = document.getElementById('reviewText').value.trim();
   const rating = parseInt(starsInput.value) || 5;
-
   if (!name || !text) return;
- const card = document.createElement('div');
+
+  const card = document.createElement('div');
   card.classList.add('review-card');
   card.innerHTML = `
     <div class="review-top">
@@ -155,15 +195,11 @@ reviewForm.addEventListener('submit', e => {
     </div>
     <p>${escapeHtml(text)}</p>
   `;
-
-
   reviewList.insertBefore(card, reviewList.firstChild);
-
   reviewForm.reset();
   currentRating = 0;
   stars.forEach(s => { s.classList.remove('active','fa-solid'); s.classList.add('fa-regular'); });
   starsInput.value = 0;
-
   showToast('Review submitted — thank you!');
 });
 
@@ -177,10 +213,8 @@ if (appointmentForm) {
   });
 }
 
-
 /* ===== CHECKOUT ===== */
 const checkoutBtn = document.querySelector('.checkout-btn');
-
 checkoutBtn.addEventListener('click', () => {
   if (cart.length === 0) { showToast('Your cart is empty!'); return; }
   openCheckoutModal();
@@ -300,7 +334,6 @@ function openCheckoutModal() {
 
   document.body.appendChild(modal);
   document.body.style.overflow = 'hidden';
-
   requestAnimationFrame(() => modal.querySelector('.co-box').classList.add('co-open'));
 
   function closeModal() {
@@ -415,79 +448,8 @@ function escapeHtml(str) {
   return str.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 }
 
-/* ===== FIREBASE CONFIG ===== */
-// 1. Go to https://console.firebase.google.com
-// 2. Create a project → Add a Web App → Copy your config here
-// 3. Go to Firestore Database → Create database → Start in test mode
-const FIREBASE_CONFIG = {
-  apiKey:            "YOUR_API_KEY",
-  authDomain:        "YOUR_PROJECT.firebaseapp.com",
-  projectId:         "YOUR_PROJECT_ID",
-  storageBucket:     "YOUR_PROJECT.appspot.com",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId:             "YOUR_APP_ID"
-};
-
-/* ===== LOAD PRODUCTS FROM FIRESTORE ===== */
-async function loadAdminProducts() {
-  const productGrid = document.getElementById('productGrid');
-  if (!productGrid) return;
-
-  // Show loading state
-  productGrid.innerHTML = '<p style="text-align:center;color:#8a6b78;padding:32px;">Loading products…</p>';
-
-  try {
-    // Dynamically load Firebase SDKs
-    const { initializeApp }    = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js');
-    const { getFirestore, collection, getDocs, orderBy, query }
-                               = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
-
-    const app = initializeApp(FIREBASE_CONFIG);
-    const db  = getFirestore(app);
-
-    const q        = query(collection(db, 'products'), orderBy('createdAt', 'desc'));
-    const snapshot = await getDocs(q);
-
-    if (snapshot.empty) {
-      productGrid.innerHTML = '';
-      return;
-    }
-
-    const html = snapshot.docs.map(doc => {
-      const p = doc.data();
-      return `
-        <div class="product-card">
-          <div class="product-image">
-            <img src="${p.image}" alt="${p.name}" onerror="this.src='https://placehold.co/400x300?text=No+Image'">
-            <div class="product-overlay">
-              <button class="btn-quick-add add-cart" data-name="${p.name}" data-price="${p.price}">Quick Add</button>
-            </div>
-          </div>
-          <div class="product-info">
-            <h3>${p.name}</h3>
-            <p class="product-price">₦${p.price}</p>
-            <button class="btn btn-primary add-cart" data-name="${p.name}" data-price="${p.price}">Add To Cart</button>
-          </div>
-        </div>
-      `;
-    }).join('');
-
-    productGrid.innerHTML = html;
-
-    productGrid.querySelectorAll('.add-cart').forEach(btn => {
-      btn.addEventListener('click', () => addToCart(btn.dataset.name, btn.dataset.price));
-    });
-
-  } catch (err) {
-    console.error('Failed to load products:', err);
-    productGrid.innerHTML = '<p style="text-align:center;color:#c0392b;padding:32px;">Could not load products. Please check your Firebase config.</p>';
-  }
-}
-
-loadAdminProducts();
-
 /* ===== SCROLL REVEAL ===== */
-const revealEls = document.querySelectorAll('.service-card, .product-card, .review-card, .contact-card');
+const revealEls = document.querySelectorAll('.service-card, .review-card, .contact-card');
 const revealObserver = new IntersectionObserver(entries => {
   entries.forEach(entry => {
     if (entry.isIntersecting) {
@@ -504,5 +466,6 @@ revealEls.forEach((el, i) => {
   el.style.transition = `opacity .5s ease ${i * 0.07}s, transform .5s ease ${i * 0.07}s, box-shadow .35s ease`;
   revealObserver.observe(el);
 });
-JSEOF
-// echo "Done"
+
+/* ===== INIT ===== */
+loadProducts();
