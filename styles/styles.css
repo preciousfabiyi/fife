@@ -1224,3 +1224,134 @@ footer p {
   border-radius: 50px;
   margin-bottom: 8px;
 }
+
+/* ===== PAYMENT PROOF UPLOAD ===== */
+.co-proof-section { margin-top: 20px; }
+
+.co-proof-label {
+  display: block;
+  font-size: .75rem;
+  font-weight: 600;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+}
+.co-required {
+  color: var(--rose);
+  font-size: .7rem;
+  margin-left: 6px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+}
+
+.co-proof-zone {
+  border: 2px dashed #e0cfd8;
+  border-radius: var(--radius-md);
+  background: var(--cream);
+  min-height: 140px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  overflow: hidden;
+  position: relative;
+  transition: border-color var(--transition), background var(--transition);
+}
+.co-proof-zone:hover {
+  border-color: var(--rose);
+  background: var(--rose-soft);
+}
+
+.co-proof-placeholder {
+  text-align: center;
+  padding: 28px 20px;
+  pointer-events: none;
+}
+.co-proof-placeholder i {
+  font-size: 2rem;
+  color: var(--rose);
+  margin-bottom: 10px;
+  display: block;
+}
+.co-proof-placeholder p {
+  font-size: .92rem;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+.co-proof-placeholder span {
+  font-size: .76rem;
+  color: var(--text-muted);
+}
+
+.co-proof-preview {
+  width: 100%;
+  position: relative;
+}
+.co-proof-preview img {
+  width: 100%;
+  max-height: 220px;
+  object-fit: cover;
+  display: block;
+}
+.co-proof-remove {
+  position: absolute;
+  top: 8px; right: 8px;
+  width: 30px; height: 30px;
+  background: rgba(26,16,20,.7);
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: .85rem;
+  cursor: pointer;
+  transition: background var(--transition);
+  z-index: 2;
+}
+.co-proof-remove:hover { background: var(--rose); }
+
+.co-proof-ready {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  background: rgba(26,16,20,.65);
+  color: #fff;
+  font-size: .8rem;
+  font-weight: 600;
+  padding: 8px 14px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.co-proof-ready i { color: #2ecc71; }
+
+.co-proof-loading {
+  text-align: center;
+  padding: 28px;
+  width: 100%;
+}
+.co-proof-loading i {
+  font-size: 1.8rem;
+  color: var(--rose);
+  display: block;
+  margin-bottom: 10px;
+}
+.co-proof-loading p {
+  font-size: .88rem;
+  color: var(--text-muted);
+}
+
+/* Shake animation when proof missing */
+@keyframes coShake {
+  0%, 100% { transform: translateX(0); }
+  20%       { transform: translateX(-8px); }
+  40%       { transform: translateX(8px); }
+  60%       { transform: translateX(-5px); }
+  80%       { transform: translateX(5px); }
+}
+.co-proof-shake {
+  animation: coShake .5s ease;
+  border-color: var(--rose) !important;
+}

@@ -302,9 +302,32 @@ function openCheckoutModal() {
           </div>
         </div>
 
-        <div class="co-field" style="margin-top:18px;">
-          <label>Payment Proof (optional)</label>
-          <input type="text" id="coProof" placeholder="e.g. transaction ID or screenshot description">
+        <!-- Payment Proof Upload -->
+        <div class="co-proof-section">
+          <label class="co-proof-label">
+            Upload Payment Screenshot <span class="co-required">*Required</span>
+          </label>
+          <div class="co-proof-zone" id="coProofZone">
+            <input type="file" id="coProofInput" accept="image/*" hidden>
+            <div class="co-proof-placeholder" id="coProofPlaceholder">
+              <i class="fa-solid fa-image"></i>
+              <p>Tap to upload screenshot</p>
+              <span>Take a photo or choose from gallery</span>
+            </div>
+            <div class="co-proof-preview hidden" id="coProofPreview">
+              <img id="coProofImg" src="" alt="Payment proof">
+              <button type="button" class="co-proof-remove" id="coProofRemove">
+                <i class="fa-solid fa-xmark"></i>
+              </button>
+              <div class="co-proof-ready">
+                <i class="fa-solid fa-circle-check"></i> Screenshot uploaded
+              </div>
+            </div>
+            <div class="co-proof-loading hidden" id="coProofLoading">
+              <i class="fa-solid fa-spinner fa-spin"></i>
+              <p>Processing image…</p>
+            </div>
+          </div>
         </div>
 
         <button class="co-confirm-btn" id="coPaidBtn">
@@ -335,6 +358,65 @@ function openCheckoutModal() {
   document.body.appendChild(modal);
   document.body.style.overflow = 'hidden';
   requestAnimationFrame(() => modal.querySelector('.co-box').classList.add('co-open'));
+
+  // Proof image state
+  let proofBase64 = null;
+
+  // Wire up proof upload zone
+  const proofZone        = modal.querySelector('#coProofZone');
+  const proofInput       = modal.querySelector('#coProofInput');
+  const proofPlaceholder = modal.querySelector('#coProofPlaceholder');
+  const proofPreview     = modal.querySelector('#coProofPreview');
+  const proofImgEl       = modal.querySelector('#coProofImg');
+  const proofRemove      = modal.querySelector('#coProofRemove');
+  const proofLoading     = modal.querySelector('#coProofLoading');
+
+  proofZone.addEventListener('click', e => {
+    if (!e.target.closest('.co-proof-remove')) proofInput.click();
+  });
+
+  proofInput.addEventListener('change', () => {
+    if (proofInput.files[0]) handleProofImage(proofInput.files[0]);
+  });
+
+  proofRemove.addEventListener('click', e => {
+    e.stopPropagation();
+    proofBase64 = null;
+    proofInput.value = '';
+    proofImgEl.src = '';
+    proofPreview.classList.add('hidden');
+    proofPlaceholder.classList.remove('hidden');
+  });
+
+  function handleProofImage(file) {
+    if (!file.type.startsWith('image/')) { showToast('Please select an image file.'); return; }
+    proofPlaceholder.classList.add('hidden');
+    proofLoading.classList.remove('hidden');
+
+    const reader = new FileReader();
+    reader.onload = ev => {
+      const img = new Image();
+      img.onload = () => {
+        // Compress to max 1000px, 80% quality
+        const MAX = 1000;
+        let { width, height } = img;
+        if (width > height && width > MAX) { height = Math.round(height * MAX / width); width = MAX; }
+        else if (height > MAX) { width = Math.round(width * MAX / height); height = MAX; }
+
+        const canvas = document.createElement('canvas');
+        canvas.width = width; canvas.height = height;
+        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+        proofBase64 = canvas.toDataURL('image/jpeg', 0.80);
+
+        proofImgEl.src = proofBase64;
+        proofLoading.classList.add('hidden');
+        proofPreview.classList.remove('hidden');
+        showToast('Screenshot uploaded ✓');
+      };
+      img.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
 
   function closeModal() {
     modal.querySelector('.co-box').classList.remove('co-open');
@@ -370,17 +452,24 @@ function openCheckoutModal() {
     const phone   = document.getElementById('coPhone').value.trim();
     const address = document.getElementById('coAddress').value.trim();
     const payment = document.getElementById('coPayment').value;
-    const proof   = document.getElementById('coProof')?.value.trim() || 'Not provided';
+
+    if (!proofBase64) {
+      showToast('Please upload your payment screenshot.');
+      proofZone.classList.add('co-proof-shake');
+      setTimeout(() => proofZone.classList.remove('co-proof-shake'), 600);
+      return;
+    }
 
     const itemsList = cart.map(i =>
       `${i.name}${i.qty > 1 ? ` ×${i.qty}` : ''} — ₦${i.price * i.qty}`
     ).join('\n');
 
-    // Save order to localStorage for admin
+    // Save order to localStorage for admin (with proof image)
     const orders = JSON.parse(localStorage.getItem('fifeOrders') || '[]');
     orders.unshift({
       ref: orderRef,
-      name, phone, address, payment, proof,
+      name, phone, address, payment,
+      proof: proofBase64,
       items: cart.map(i => ({ ...i })),
       total,
       date: new Date().toLocaleString('en-NG'),
@@ -390,16 +479,15 @@ function openCheckoutModal() {
 
     // Send email notification via EmailJS
     sendAdminNotification({
-      order_ref:    orderRef,
-      customer_name: name,
-      customer_phone: phone,
+      order_ref:        orderRef,
+      customer_name:    name,
+      customer_phone:   phone,
       customer_address: address,
-      payment_method: payment,
-      payment_proof: proof,
-      items_list:   itemsList,
-      order_total:  `₦${total}`,
-      order_date:   new Date().toLocaleString('en-NG'),
-      admin_email:  ADMIN_EMAIL,
+      payment_method:   payment,
+      items_list:       itemsList,
+      order_total:      `₦${total}`,
+      order_date:       new Date().toLocaleString('en-NG'),
+      admin_email:      ADMIN_EMAIL,
     });
 
     // Show confirmation

@@ -81,6 +81,7 @@ function showDashboard() {
   adminDashboard.classList.remove('hidden');
   renderProducts();
   updateCount();
+  updateOrdersBadge();
 }
 
 /* ===== TABS ===== */
@@ -94,17 +95,133 @@ document.querySelectorAll('.sidebar-nav a[data-tab]').forEach(link => {
 
     document.getElementById('tabAddProduct').classList.add('hidden');
     document.getElementById('tabManageProducts').classList.add('hidden');
+    document.getElementById('tabOrders').classList.add('hidden');
 
     if (tab === 'addProduct') {
       document.getElementById('tabAddProduct').classList.remove('hidden');
       document.getElementById('tabTitle').textContent = 'Add Product';
-    } else {
+    } else if (tab === 'manageProducts') {
       document.getElementById('tabManageProducts').classList.remove('hidden');
       document.getElementById('tabTitle').textContent = 'Manage Products';
       renderProducts();
+    } else if (tab === 'orders') {
+      document.getElementById('tabOrders').classList.remove('hidden');
+      document.getElementById('tabTitle').textContent = 'Orders';
+      renderOrders();
     }
   });
 });
+
+/* ===== ORDERS ===== */
+function renderOrders() {
+  const ordersList = document.getElementById('ordersList');
+  const orders     = JSON.parse(localStorage.getItem('fifeOrders') || '[]');
+
+  // Update badge
+  const badge = document.getElementById('ordersBadge');
+  if (badge) badge.textContent = orders.length > 0 ? orders.length : '';
+
+  if (orders.length === 0) {
+    ordersList.innerHTML = '<p class="empty-msg">No orders received yet.</p>';
+    return;
+  }
+
+  ordersList.innerHTML = orders.map((o, idx) => `
+    <div class="order-card" id="order-${idx}">
+      <div class="order-header">
+        <div class="order-ref-wrap">
+          <span class="order-ref">${o.ref}</span>
+          <span class="order-status status-${(o.status||'Pending').toLowerCase()}">${o.status || 'Pending'}</span>
+        </div>
+        <span class="order-date">${o.date}</span>
+      </div>
+
+      <div class="order-body">
+        <div class="order-details">
+          <div class="order-info-row"><i class="fa-solid fa-user"></i> <span>${o.name}</span></div>
+          <div class="order-info-row"><i class="fa-solid fa-phone"></i> <span>${o.phone}</span></div>
+          <div class="order-info-row"><i class="fa-solid fa-location-dot"></i> <span>${o.address}</span></div>
+          <div class="order-info-row"><i class="fa-solid fa-credit-card"></i> <span>${o.payment}</span></div>
+
+          <div class="order-items">
+            ${o.items.map(i => `
+              <div class="order-item-row">
+                <span>${i.name}${i.qty > 1 ? ` ×${i.qty}` : ''}</span>
+                <span>₦${i.price * i.qty}</span>
+              </div>`).join('')}
+            <div class="order-item-row total-row">
+              <span>Total</span>
+              <strong>₦${o.total}</strong>
+            </div>
+          </div>
+        </div>
+
+        <div class="order-proof-wrap">
+          <p class="order-proof-label">Payment Screenshot</p>
+          ${o.proof && o.proof.startsWith('data:image')
+            ? `<img src="${o.proof}" class="order-proof-img" alt="Payment proof" onclick="openProofViewer('${idx}')">`
+            : `<div class="order-no-proof"><i class="fa-solid fa-image-slash"></i><span>No screenshot</span></div>`
+          }
+        </div>
+      </div>
+
+      <div class="order-actions">
+        <button class="order-btn btn-confirm" data-idx="${idx}" ${o.status==='Confirmed'?'disabled':''}>
+          <i class="fa-solid fa-check"></i> Confirm
+        </button>
+        <button class="order-btn btn-reject" data-idx="${idx}" ${o.status==='Rejected'?'disabled':''}>
+          <i class="fa-solid fa-xmark"></i> Reject
+        </button>
+      </div>
+    </div>
+  `).join('');
+
+  // Status buttons
+  ordersList.querySelectorAll('.btn-confirm').forEach(btn => {
+    btn.addEventListener('click', () => updateOrderStatus(parseInt(btn.dataset.idx), 'Confirmed'));
+  });
+  ordersList.querySelectorAll('.btn-reject').forEach(btn => {
+    btn.addEventListener('click', () => updateOrderStatus(parseInt(btn.dataset.idx), 'Rejected'));
+  });
+}
+
+function updateOrderStatus(idx, status) {
+  const orders = JSON.parse(localStorage.getItem('fifeOrders') || '[]');
+  if (!orders[idx]) return;
+  orders[idx].status = status;
+  localStorage.setItem('fifeOrders', JSON.stringify(orders));
+  renderOrders();
+  showToast(`Order ${orders[idx].ref} marked as ${status}.`);
+}
+
+// Full-screen proof image viewer
+window.openProofViewer = function(idx) {
+  const orders = JSON.parse(localStorage.getItem('fifeOrders') || '[]');
+  const o = orders[idx];
+  if (!o || !o.proof) return;
+  document.getElementById('proofViewerModal')?.remove();
+  const viewer = document.createElement('div');
+  viewer.id = 'proofViewerModal';
+  viewer.innerHTML = `
+    <div class="proof-viewer-backdrop"></div>
+    <div class="proof-viewer-inner">
+      <button class="proof-viewer-close"><i class="fa-solid fa-xmark"></i></button>
+      <img src="${o.proof}" alt="Payment proof">
+      <p>${o.name} · ${o.ref}</p>
+    </div>
+  `;
+  document.body.appendChild(viewer);
+  viewer.querySelector('.proof-viewer-backdrop').addEventListener('click', () => viewer.remove());
+  viewer.querySelector('.proof-viewer-close').addEventListener('click', () => viewer.remove());
+};
+
+// Update orders badge on load
+function updateOrdersBadge() {
+  const orders = JSON.parse(localStorage.getItem('fifeOrders') || '[]');
+  const badge  = document.getElementById('ordersBadge');
+  if (badge) badge.textContent = orders.length > 0 ? orders.length : '';
+}
+
 
 /* ===== IMAGE UPLOAD ===== */
 uploadZone.addEventListener('click', () => productImageInput.click());
