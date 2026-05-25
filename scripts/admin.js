@@ -4,36 +4,13 @@
              tab navigation, delete with confirm
 ============================================ */
 
-/* ===== FIREBASE CONFIG ===== */
-// Must match the config in main.js exactly
-const FIREBASE_CONFIG = {
-  apiKey:            "YOUR_API_KEY",
-  authDomain:        "YOUR_PROJECT.firebaseapp.com",
-  projectId:         "YOUR_PROJECT_ID",
-  storageBucket:     "YOUR_PROJECT.appspot.com",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId:             "YOUR_APP_ID"
-};
-
-/* ===== CREDENTIALS (change these) ===== */
-const ADMIN_USER = 'fifeadmin';
-const ADMIN_PASS = 'fife2026';
-
-/* ===== FIREBASE STATE ===== */
-let db          = null;
-let fbApp       = null;
-let fbProducts  = []; // local cache of Firestore docs {id, ...data}
-
-/* ===== Init Firebase ===== */
-async function initFirebase() {
-  const { initializeApp }    = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js');
-  const { getFirestore }     = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
-  fbApp = initializeApp(FIREBASE_CONFIG);
-  db    = getFirestore(fbApp);
-}
+/* ===== CREDENTIALS ===== */
+const ADMIN_USER = 'Fife';
+const ADMIN_PASS = 'Fife1234';
 
 /* ===== STATE ===== */
-let pendingDeleteId  = null;
+let products        = JSON.parse(localStorage.getItem('fifeProducts') || '[]');
+let pendingDeleteIdx = null;
 let imageBase64      = null;
 
 /* ===== ELEMENTS ===== */
@@ -92,34 +69,6 @@ logoutBtn.addEventListener('click', () => {
   document.getElementById('loginPass').value = '';
 });
 
-/* ===== MOBILE SIDEBAR TOGGLE ===== */
-const sidebarToggle  = document.getElementById('sidebarToggle');
-const sidebarOverlay = document.getElementById('sidebarOverlay');
-const adminSidebar   = document.querySelector('.admin-sidebar');
-
-function openSidebar() {
-  adminSidebar.classList.add('open');
-  sidebarOverlay.classList.add('active');
-  document.body.style.overflow = 'hidden';
-}
-function closeSidebar() {
-  adminSidebar.classList.remove('open');
-  sidebarOverlay.classList.remove('active');
-  document.body.style.overflow = '';
-}
-
-sidebarToggle.addEventListener('click', () => {
-  adminSidebar.classList.contains('open') ? closeSidebar() : openSidebar();
-});
-sidebarOverlay.addEventListener('click', closeSidebar);
-
-// Close sidebar when a nav link is tapped on mobile
-document.querySelectorAll('.sidebar-nav a[data-tab]').forEach(link => {
-  link.addEventListener('click', () => {
-    if (window.innerWidth < 900) closeSidebar();
-  });
-});
-
 togglePass.addEventListener('click', () => {
   const passInput = document.getElementById('loginPass');
   const isText = passInput.type === 'text';
@@ -130,10 +79,8 @@ togglePass.addEventListener('click', () => {
 function showDashboard() {
   loginScreen.classList.add('hidden');
   adminDashboard.classList.remove('hidden');
-  initFirebase().then(() => {
-    loadProducts();
-    updateCount();
-  });
+  renderProducts();
+  updateCount();
 }
 
 /* ===== TABS ===== */
@@ -154,7 +101,7 @@ document.querySelectorAll('.sidebar-nav a[data-tab]').forEach(link => {
     } else {
       document.getElementById('tabManageProducts').classList.remove('hidden');
       document.getElementById('tabTitle').textContent = 'Manage Products';
-      loadProducts();
+      renderProducts();
     }
   });
 });
@@ -183,16 +130,61 @@ function handleImageFile(file) {
     showToast('Please select a valid image file.');
     return;
   }
-  if (file.size > 5 * 1024 * 1024) {
-    showToast('Image must be under 5MB.');
+  if (file.size > 15 * 1024 * 1024) {
+    showToast('Image must be under 15MB.');
     return;
   }
+
+  // Show loading state
+  uploadPlaceholder.innerHTML = `
+    <i class="fa-solid fa-spinner fa-spin"></i>
+    <p>Compressing image…</p>
+    <span>This only takes a second</span>
+  `;
+
   const reader = new FileReader();
   reader.onload = e => {
-    imageBase64 = e.target.result;
-    previewImg.src = imageBase64;
-    uploadPlaceholder.classList.add('hidden');
-    imagePreviewEl.classList.remove('hidden');
+    const img = new Image();
+    img.onload = () => {
+      // Compress: max 800px wide/tall, 75% quality JPEG
+      const MAX = 800;
+      let { width, height } = img;
+      if (width > height && width > MAX) {
+        height = Math.round((height * MAX) / width);
+        width  = MAX;
+      } else if (height > MAX) {
+        width  = Math.round((width * MAX) / height);
+        height = MAX;
+      }
+
+      const canvas = document.createElement('canvas');
+      canvas.width  = width;
+      canvas.height = height;
+      canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+
+      imageBase64 = canvas.toDataURL('image/jpeg', 0.75);
+
+      // Show size saved
+      const originalKB  = Math.round(file.size / 1024);
+      const compressedKB = Math.round((imageBase64.length * 0.75) / 1024);
+      const saving = originalKB > compressedKB
+        ? ` (saved ~${originalKB - compressedKB}KB)`
+        : '';
+
+      previewImg.src = imageBase64;
+      uploadPlaceholder.classList.add('hidden');
+      imagePreviewEl.classList.remove('hidden');
+
+      // Restore placeholder HTML for next use
+      uploadPlaceholder.innerHTML = `
+        <i class="fa-solid fa-cloud-arrow-up"></i>
+        <p>Click or drag &amp; drop to upload image</p>
+        <span>PNG, JPG, WEBP — max 15MB</span>
+      `;
+
+      showToast(`Image ready${saving} ✓`);
+    };
+    img.src = e.target.result;
   };
   reader.readAsDataURL(file);
 }
@@ -207,7 +199,7 @@ removeImgBtn.addEventListener('click', e => {
 });
 
 /* ===== ADD PRODUCT ===== */
-productForm.addEventListener('submit', async e => {
+productForm.addEventListener('submit', e => {
   e.preventDefault();
 
   const name     = document.getElementById('productName').value.trim();
@@ -217,61 +209,25 @@ productForm.addEventListener('submit', async e => {
   if (!name || !price) { showToast('Please fill in all required fields.'); return; }
   if (!imageBase64)    { showToast('Please upload a product image.');     return; }
 
-  const submitBtn = productForm.querySelector('.btn-upload');
-  submitBtn.disabled = true;
-  submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Uploading…';
+  products.unshift({ name, price: Number(price), image: imageBase64, category: category || 'General' });
+  saveProducts();
+  updateCount();
 
-  try {
-    const { collection, addDoc, serverTimestamp } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
-    await addDoc(collection(db, 'products'), {
-      name,
-      price: Number(price),
-      image: imageBase64,
-      category: category || 'General',
-      createdAt: serverTimestamp()
-    });
+  // Reset form
+  productForm.reset();
+  imageBase64 = null;
+  previewImg.src = '';
+  imagePreviewEl.classList.add('hidden');
+  uploadPlaceholder.classList.remove('hidden');
 
-    // Reset form
-    productForm.reset();
-    imageBase64 = null;
-    previewImg.src = '';
-    imagePreviewEl.classList.add('hidden');
-    uploadPlaceholder.classList.remove('hidden');
-
-    showToast(`"${name}" added successfully!`);
-    loadProducts();
-
-  } catch (err) {
-    console.error(err);
-    showToast('Upload failed. Check your Firebase config.');
-  } finally {
-    submitBtn.disabled = false;
-    submitBtn.innerHTML = '<i class="fa-solid fa-upload"></i> Upload Product';
-  }
+  showToast(`"${name}" added successfully!`);
 });
 
-/* ===== LOAD & RENDER PRODUCTS FROM FIRESTORE ===== */
-async function loadProducts(filter = '') {
-  adminProductsEl.innerHTML = '<p class="empty-msg">Loading…</p>';
-
-  try {
-    const { collection, getDocs, orderBy, query } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
-    const q        = query(collection(db, 'products'), orderBy('createdAt', 'desc'));
-    const snapshot = await getDocs(q);
-
-    fbProducts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    renderProducts(filter);
-    updateCount();
-  } catch (err) {
-    console.error(err);
-    adminProductsEl.innerHTML = '<p class="empty-msg" style="color:#c0392b;">Failed to load products. Check Firebase config.</p>';
-  }
-}
-
+/* ===== RENDER PRODUCTS ===== */
 function renderProducts(filter = '') {
   const filtered = filter
-    ? fbProducts.filter(p => p.name.toLowerCase().includes(filter.toLowerCase()) || (p.category||'').toLowerCase().includes(filter.toLowerCase()))
-    : fbProducts;
+    ? products.filter(p => p.name.toLowerCase().includes(filter.toLowerCase()) || (p.category||'').toLowerCase().includes(filter.toLowerCase()))
+    : products;
 
   const n = filtered.length;
   if (manageCountEl) manageCountEl.textContent = `${n} product${n !== 1 ? 's' : ''}`;
@@ -281,29 +237,31 @@ function renderProducts(filter = '') {
     return;
   }
 
-  adminProductsEl.innerHTML = filtered.map(p => `
-    <div class="admin-product">
-      <div class="admin-product-img-wrap">
-        <img src="${p.image}" alt="${p.name}" onerror="this.src='https://placehold.co/400x300?text=No+Image'">
-        <span class="product-category-badge">${p.category || 'General'}</span>
+  adminProductsEl.innerHTML = filtered.map((p, idx) => {
+    const realIdx = products.indexOf(p);
+    return `
+      <div class="admin-product">
+        <div class="admin-product-img-wrap">
+          <img src="${p.image}" alt="${p.name}" onerror="this.src='https://placehold.co/400x300?text=No+Image'">
+          <span class="product-category-badge">${p.category || 'General'}</span>
+        </div>
+        <div class="admin-product-info">
+          <h3>${p.name}</h3>
+          <p class="price">&#8358;${p.price}</p>
+        </div>
+        <div class="admin-product-actions">
+          <button class="btn-delete-product" data-idx="${realIdx}" aria-label="Delete ${p.name}">
+            <i class="fa-solid fa-trash-can"></i> Delete
+          </button>
+        </div>
       </div>
-      <div class="admin-product-info">
-        <h3>${p.name}</h3>
-        <p class="price">&#8358;${p.price}</p>
-      </div>
-      <div class="admin-product-actions">
-        <button class="btn-delete-product" data-id="${p.id}" aria-label="Delete ${p.name}">
-          <i class="fa-solid fa-trash-can"></i> Delete
-        </button>
-      </div>
-    </div>
-  `).join('');
+    `;
+  }).join('');
 
   adminProductsEl.querySelectorAll('.btn-delete-product').forEach(btn => {
     btn.addEventListener('click', () => {
-      pendingDeleteId = btn.dataset.id;
-      const product = fbProducts.find(p => p.id === pendingDeleteId);
-      delProductName.textContent = `"${product?.name}" will be permanently removed.`;
+      pendingDeleteIdx = parseInt(btn.dataset.idx);
+      delProductName.textContent = `"${products[pendingDeleteIdx].name}" will be permanently removed.`;
       deleteModal.classList.remove('hidden');
     });
   });
@@ -317,34 +275,35 @@ if (searchInput) {
 /* ===== DELETE CONFIRM MODAL ===== */
 delCancel.addEventListener('click', () => {
   deleteModal.classList.add('hidden');
-  pendingDeleteId = null;
+  pendingDeleteIdx = null;
 });
 deleteModal.querySelector('.del-backdrop').addEventListener('click', () => {
   deleteModal.classList.add('hidden');
-  pendingDeleteId = null;
+  pendingDeleteIdx = null;
 });
-delConfirm.addEventListener('click', async () => {
-  if (!pendingDeleteId) return;
-
-  const product = fbProducts.find(p => p.id === pendingDeleteId);
-  const name    = product?.name || 'Product';
-
-  try {
-    const { doc, deleteDoc } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
-    await deleteDoc(doc(db, 'products', pendingDeleteId));
-    showToast(`"${name}" deleted.`);
-    deleteModal.classList.add('hidden');
-    pendingDeleteId = null;
-    loadProducts(searchInput ? searchInput.value : '');
-  } catch (err) {
-    console.error(err);
-    showToast('Delete failed. Please try again.');
-  }
+delConfirm.addEventListener('click', () => {
+  if (pendingDeleteIdx === null) return;
+  const name = products[pendingDeleteIdx].name;
+  products.splice(pendingDeleteIdx, 1);
+  saveProducts();
+  updateCount();
+  renderProducts(searchInput ? searchInput.value : '');
+  deleteModal.classList.add('hidden');
+  pendingDeleteIdx = null;
+  showToast(`"${name}" deleted.`);
 });
 
 /* ===== HELPERS ===== */
+function saveProducts() {
+  try {
+    localStorage.setItem('fifeProducts', JSON.stringify(products));
+  } catch (e) {
+    showToast('Storage full — some images may not save. Try smaller images.');
+  }
+}
+
 function updateCount() {
-  const n = fbProducts.length;
+  const n = products.length;
   if (productCountEl) productCountEl.textContent = `${n} product${n !== 1 ? 's' : ''}`;
 }
 
