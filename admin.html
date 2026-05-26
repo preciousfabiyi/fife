@@ -7,6 +7,10 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"/>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles/admin.css">
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
 </head>
 <body>
 
@@ -14,10 +18,10 @@
 <div id="loginScreen" class="login-screen">
   <div class="login-card">
     <div class="login-logo">
-      <img src="images/fife-logo.jpg" alt="Fife Beauty Hub">
+      <img src="fife-logo.jpg" alt="Fife Beauty Hub">
     </div>
     <h2 class="login-title">Admin Login</h2>
-    <p class="login-sub">This area is restricted to authorized staff only.</p>
+    <p class="login-sub">Restricted to authorized staff only.</p>
     <div id="loginError" class="login-error hidden">
       <i class="fa-solid fa-circle-exclamation"></i> Incorrect username or password.
     </div>
@@ -47,22 +51,22 @@
   </div>
 </div>
 
-<!-- ===== ADMIN DASHBOARD (hidden until logged in) ===== -->
+<!-- ===== ADMIN DASHBOARD ===== -->
 <div id="adminDashboard" class="admin-wrapper hidden">
 
-  <!-- Sidebar -->
+  <!-- Desktop Sidebar -->
   <aside class="admin-sidebar">
     <div class="sidebar-brand">
       <img src="images/fife-logo.jpg" alt="Fife" class="sidebar-logo">
     </div>
     <nav class="sidebar-nav">
-      <a href="#addProduct" class="active" data-tab="addProduct">
+      <a href="#" class="active" data-tab="addProduct">
         <i class="fa-solid fa-plus-circle"></i> Add Product
       </a>
-      <a href="#manageProducts" data-tab="manageProducts">
+      <a href="#" data-tab="manageProducts">
         <i class="fa-solid fa-boxes-stacked"></i> Manage Products
       </a>
-      <a href="#orders" data-tab="orders">
+      <a href="#" data-tab="orders">
         <i class="fa-solid fa-receipt"></i> Orders
         <span class="orders-badge" id="ordersBadge"></span>
       </a>
@@ -82,9 +86,14 @@
     <div class="admin-topbar">
       <div>
         <h1 id="tabTitle">Add Product</h1>
-        <p class="admin-welcome">Welcome back, <strong>Admin</strong></p>
+        <p class="admin-welcome">Welcome, <strong>Admin</strong></p>
       </div>
-      <span class="product-count" id="productCount">0 products</span>
+      <div class="topbar-right">
+        <span class="product-count" id="productCount">0 products</span>
+        <button class="btn-logout-top" id="logoutBtnTop">
+          <i class="fa-solid fa-right-from-bracket"></i>
+        </button>
+      </div>
     </div>
 
     <!-- TAB: Add Product -->
@@ -98,29 +107,26 @@
           </div>
           <div class="form-group">
             <label for="productPrice">Price (₦)</label>
-            <input type="number" id="productPrice" placeholder="e.g. 25" min="0" required>
+            <input type="number" id="productPrice" placeholder="e.g. 2500" min="0" required>
           </div>
         </div>
-
-        <!-- Image Upload -->
         <div class="form-group">
           <label>Product Image</label>
           <div class="image-upload-zone" id="uploadZone">
             <input type="file" id="productImage" accept="image/*" hidden>
             <div class="upload-placeholder" id="uploadPlaceholder">
               <i class="fa-solid fa-cloud-arrow-up"></i>
-              <p>Click or drag &amp; drop to upload image</p>
-              <span>PNG, JPG, WEBP — max 5MB</span>
+              <p>Tap or drag to upload image</p>
+              <span>PNG, JPG, WEBP — max 15MB</span>
             </div>
             <div class="image-preview hidden" id="imagePreview">
               <img id="previewImg" src="" alt="Preview">
-              <button type="button" class="remove-img" id="removeImg" aria-label="Remove image">
+              <button type="button" class="remove-img" id="removeImg">
                 <i class="fa-solid fa-xmark"></i>
               </button>
             </div>
           </div>
         </div>
-
         <div class="form-group">
           <label for="productCategory">Category</label>
           <select id="productCategory">
@@ -131,18 +137,24 @@
             <option>Facial Care</option>
           </select>
         </div>
-
-        <button type="submit" class="btn-upload">
+        <div class="form-group">
+          <label for="productDesc">Description (optional)</label>
+          <textarea id="productDesc" placeholder="Short product description…" rows="3"></textarea>
+        </div>
+        <button type="submit" class="btn-upload" id="uploadBtn">
           <i class="fa-solid fa-upload"></i> Upload Product
         </button>
       </form>
     </section>
 
-    <!-- TAB: Manage / Delete Products -->
+    <!-- TAB: Manage Products -->
     <section class="admin-card hidden" id="tabManageProducts">
       <h2 class="card-title"><i class="fa-solid fa-boxes-stacked"></i> Manage Products</h2>
       <div class="manage-toolbar">
-        <input type="text" id="searchProducts" placeholder="Search products…" class="search-input">
+        <div class="search-wrap">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="text" id="searchProducts" placeholder="Search products…" class="search-input">
+        </div>
         <span id="manageCount" class="manage-count">0 products</span>
       </div>
       <div id="adminProducts" class="admin-product-grid">
@@ -152,18 +164,42 @@
 
     <!-- TAB: Orders -->
     <section class="admin-card hidden" id="tabOrders">
-      <h2 class="card-title"><i class="fa-solid fa-receipt"></i> Customer Orders</h2>
+      <h2 class="card-title"><i class="fa-solid fa-receipt"></i> Orders
+        <span class="orders-count-pill" id="ordersCountPill"></span>
+      </h2>
+      <div class="orders-filter-row">
+        <button class="order-filter-btn active" data-status="all">All</button>
+        <button class="order-filter-btn" data-status="Pending">Pending</button>
+        <button class="order-filter-btn" data-status="Confirmed">Confirmed</button>
+        <button class="order-filter-btn" data-status="Rejected">Rejected</button>
+      </div>
       <div id="ordersList">
         <p class="empty-msg">No orders received yet.</p>
       </div>
     </section>
-
   </main>
 </div>
 
+<!-- Mobile Bottom Nav -->
+<nav class="admin-bottom-nav hidden" id="adminBottomNav">
+  <a href="#" class="active" data-tab="addProduct">
+    <i class="fa-solid fa-plus-circle"></i>
+    <span>Add</span>
+  </a>
+  <a href="#" data-tab="manageProducts">
+    <i class="fa-solid fa-boxes-stacked"></i>
+    <span>Products</span>
+  </a>
+  <a href="#" data-tab="orders">
+    <i class="fa-solid fa-receipt"></i>
+    <span>Orders</span>
+    <span class="nav-orders-badge" id="navOrdersBadge"></span>
+  </a>
+</nav>
+
 <div class="toast" id="adminToast"></div>
 
-<!-- Confirm Delete Modal -->
+<!-- Delete Modal -->
 <div id="deleteModal" class="del-modal hidden">
   <div class="del-backdrop"></div>
   <div class="del-box">
@@ -174,6 +210,16 @@
       <button class="del-cancel" id="delCancel">Cancel</button>
       <button class="del-confirm" id="delConfirm">Yes, Delete</button>
     </div>
+  </div>
+</div>
+
+<!-- Proof Viewer -->
+<div id="proofViewerModal" class="hidden">
+  <div class="proof-viewer-backdrop" id="proofBackdrop"></div>
+  <div class="proof-viewer-inner">
+    <button class="proof-viewer-close" id="proofClose"><i class="fa-solid fa-xmark"></i></button>
+    <img id="proofViewerImg" src="" alt="Payment proof">
+    <p id="proofViewerLabel"></p>
   </div>
 </div>
 

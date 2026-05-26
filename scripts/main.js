@@ -1,7 +1,14 @@
 /* ============================================
    FIFE BEAUTY HUB & SPA — Main JS
 ============================================ */
-
+const firebaseConfig = {
+  apiKey: "AIzaSyDi8fwHOwvT_BHZTyBXSDCmh9QWaAd5298",
+  authDomain: "fife-beauty-hub-f2d2b.firebaseapp.com",
+  projectId: "fife-beauty-hub-f2d2b",
+  storageBucket: "fife-beauty-hub-f2d2b.firebasestorage.app",
+  messagingSenderId: "392678495728",
+  appId: "1:392678495728:web:1b5f05d3217bf3ae6df935"
+};
 /* ===== PAYMENT & NOTIFICATION CONFIG ===== */
 const BANK_NAME    = 'Moniepoint';
 const ACCOUNT_NO   = '6442284424';
@@ -670,3 +677,4 @@ revealEls.forEach((el, i) => {
 
 /* ===== INIT ===== */
 loadProducts();
+
