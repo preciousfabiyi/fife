@@ -8,9 +8,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles/styles.css"/>
-  <link rel="stylesheet" href="styles/larger.css"/>
-
+  <link rel="stylesheet" href="styles.css"/>
+  <!-- EmailJS SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 </head>
 <body>
 
@@ -36,7 +36,7 @@
 <!-- ================= HEADER ================= -->
 <header class="header" id="header">
   <a href="#home" class="logo">
-    <img src="images/fife-logo.jpg" alt="Fife Beauty Hub & Spa Logo" class="logo-img">
+    <img src="fife-logo.jpg" alt="Fife Beauty Hub & Spa Logo" class="logo-img">
   </a>
 
   <nav class="navbar">
@@ -124,9 +124,30 @@
   <h2 class="section-title">Featured Products</h2>
   <p class="section-subtitle">Curated beauty essentials to extend your spa experience at home.</p>
 
-  <div class="product-grid" id="productGrid">
-    <!-- Products loaded dynamically from admin uploads -->
+  <!-- Toolbar -->
+  <div class="product-toolbar">
+    <div class="product-search-wrap">
+      <i class="fa-solid fa-magnifying-glass"></i>
+      <input type="text" class="product-search" id="productSearch" placeholder="Search products…">
+    </div>
+    <div class="product-filter-btns" id="filterBtns">
+      <button class="filter-btn active" data-cat="All">All</button>
+      <button class="filter-btn" data-cat="Skincare">Skincare</button>
+      <button class="filter-btn" data-cat="Body Care">Body Care</button>
+      <button class="filter-btn" data-cat="Nail Care">Nail Care</button>
+      <button class="filter-btn" data-cat="Facial Care">Facial Care</button>
+    </div>
+    <select class="product-sort" id="productSort">
+      <option value="newest">Newest First</option>
+      <option value="price-asc">Price: Low to High</option>
+      <option value="price-desc">Price: High to Low</option>
+      <option value="name-asc">Name: A–Z</option>
+    </select>
   </div>
+
+  <p class="product-result-count" id="productResultCount"></p>
+  <div class="product-grid" id="productGrid"></div>
+  <div class="product-pagination" id="productPagination"></div>
 </section>
 
 <!-- ================= REVIEWS ================= -->
@@ -273,7 +294,7 @@
 <footer>
   <div class="footer-inner">
     <div class="footer-brand">
-      <img src="images/fife-logo.jpg" alt="Fife Beauty Hub & Spa" class="footer-logo-img">
+      <img src="fife-logo.jpg" alt="Fife Beauty Hub & Spa" class="footer-logo-img">
     </div>
     <p>© 2026 Fife Beauty Hub &amp; Spa · All Rights Reserved</p>
     <a href="admin.html" class="footer-admin">Admin Portal</a>
@@ -283,6 +304,6 @@
 <!-- Toast notification -->
 <div class="toast" id="toast"></div>
 
-<script src="scripts/main.js"></script>
+<script src="main.js"></script>
 </body>
 </html>

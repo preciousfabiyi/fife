@@ -8,7 +8,7 @@ const ACCOUNT_NO   = '6442284424';
 const ACCOUNT_NAME = 'Fifesbeauty Limited';
 const ADMIN_EMAIL  = 'victoriaayomide32@gmail.com';
 
-// EmailJS config — sign up free at emailjs.com, fill in your IDs
+// EmailJS config — use Gmail SMTP service (see EMAILJS_SETUP.md)
 const EMAILJS_SERVICE_ID  = 'service_owqkvu8';
 const EMAILJS_TEMPLATE_ID = 'template_2aauh8t';
 const EMAILJS_PUBLIC_KEY  = 'JrK8JL9Ki1GA4yE8R';
@@ -99,49 +99,158 @@ function addToCart(name, price) {
 }
 
 /* ===== LOAD PRODUCTS FROM ADMIN ===== */
-function loadProducts() {
-  const grid     = document.getElementById('productGrid');
-  const products = JSON.parse(localStorage.getItem('fifeProducts') || '[]');
+const PRODUCTS_PER_PAGE = 8;
+let currentPage      = 1;
+let activeFilter     = 'All';
+let activeSearch     = '';
+let activeSort       = 'newest';
 
-  if (products.length === 0) {
+function loadProducts() {
+  const allProducts = JSON.parse(localStorage.getItem('fifeProducts') || '[]');
+
+  // 1. Filter by category
+  let filtered = activeFilter === 'All'
+    ? [...allProducts]
+    : allProducts.filter(p => (p.category || 'General') === activeFilter);
+
+  // 2. Filter by search
+  if (activeSearch) {
+    const q = activeSearch.toLowerCase();
+    filtered = filtered.filter(p =>
+      p.name.toLowerCase().includes(q) ||
+      (p.category || '').toLowerCase().includes(q)
+    );
+  }
+
+  // 3. Sort
+  if (activeSort === 'price-asc')  filtered.sort((a, b) => a.price - b.price);
+  if (activeSort === 'price-desc') filtered.sort((a, b) => b.price - a.price);
+  if (activeSort === 'name-asc')   filtered.sort((a, b) => a.name.localeCompare(b.name));
+  // 'newest' = default order (already newest first from admin)
+
+  // 4. Result count
+  const countEl = document.getElementById('productResultCount');
+  if (countEl) {
+    countEl.textContent = filtered.length === 0
+      ? ''
+      : `Showing ${filtered.length} product${filtered.length !== 1 ? 's' : ''}`;
+  }
+
+  // 5. Paginate
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PRODUCTS_PER_PAGE));
+  if (currentPage > totalPages) currentPage = 1;
+  const start   = (currentPage - 1) * PRODUCTS_PER_PAGE;
+  const paged   = filtered.slice(start, start + PRODUCTS_PER_PAGE);
+
+  // 6. Render cards
+  const grid = document.getElementById('productGrid');
+  if (filtered.length === 0) {
     grid.innerHTML = `
       <div class="no-products-msg">
         <i class="fa-solid fa-box-open"></i>
-        <p>No products yet. Check back soon!</p>
+        <p>${activeSearch || activeFilter !== 'All' ? 'No products match your search.' : 'No products yet. Check back soon!'}</p>
       </div>`;
-    return;
-  }
-
-  grid.innerHTML = products.map(p => `
-    <div class="product-card">
-      <div class="product-image">
-        <img src="${p.image}" alt="${p.name}" loading="lazy">
-        <div class="product-overlay">
-          <button class="btn-quick-add add-cart" data-name="${p.name}" data-price="${p.price}">Quick Add</button>
+  } else {
+    grid.innerHTML = paged.map(p => `
+      <div class="product-card">
+        <div class="product-image">
+          <img src="${p.image}" alt="${p.name}" loading="lazy">
+          <div class="product-overlay">
+            <button class="btn-quick-add add-cart" data-name="${p.name}" data-price="${p.price}">Quick Add</button>
+          </div>
+        </div>
+        <div class="product-info">
+          ${p.category ? `<span class="product-category">${p.category}</span>` : ''}
+          <h3>${p.name}</h3>
+          <p class="product-price">₦${Number(p.price).toLocaleString()}</p>
+          <button class="btn btn-primary add-cart" data-name="${p.name}" data-price="${p.price}">Add To Cart</button>
         </div>
       </div>
-      <div class="product-info">
-        ${p.category ? `<span class="product-category">${p.category}</span>` : ''}
-        <h3>${p.name}</h3>
-        <p class="product-price">₦${p.price}</p>
-        <button class="btn btn-primary add-cart" data-name="${p.name}" data-price="${p.price}">Add To Cart</button>
-      </div>
-    </div>
-  `).join('');
+    `).join('');
 
-  // Attach cart listeners to newly rendered buttons
-  grid.querySelectorAll('.add-cart').forEach(btn => {
-    btn.addEventListener('click', () => addToCart(btn.dataset.name, btn.dataset.price));
+    grid.querySelectorAll('.add-cart').forEach(btn => {
+      btn.addEventListener('click', () => addToCart(btn.dataset.name, btn.dataset.price));
+    });
+
+    // Scroll reveal on new cards
+    grid.querySelectorAll('.product-card').forEach((el, i) => {
+      el.style.opacity = '0';
+      el.style.transform = 'translateY(28px)';
+      el.style.transition = `opacity .45s ease ${i * 0.06}s, transform .45s ease ${i * 0.06}s, box-shadow .35s ease`;
+      revealObserver.observe(el);
+    });
+  }
+
+  // 7. Render pagination
+  renderPagination(totalPages);
+}
+
+function renderPagination(totalPages) {
+  const container = document.getElementById('productPagination');
+  if (!container) return;
+  if (totalPages <= 1) { container.innerHTML = ''; return; }
+
+  let html = `
+    <button class="page-btn page-arrow" id="pagePrev" ${currentPage === 1 ? 'disabled' : ''}>
+      <i class="fa-solid fa-chevron-left"></i>
+    </button>`;
+
+  for (let i = 1; i <= totalPages; i++) {
+    if (
+      i === 1 || i === totalPages ||
+      (i >= currentPage - 1 && i <= currentPage + 1)
+    ) {
+      html += `<button class="page-btn ${i === currentPage ? 'active' : ''}" data-page="${i}">${i}</button>`;
+    } else if (i === currentPage - 2 || i === currentPage + 2) {
+      html += `<span style="color:var(--text-muted);align-self:center">…</span>`;
+    }
+  }
+
+  html += `
+    <button class="page-btn page-arrow" id="pageNext" ${currentPage === totalPages ? 'disabled' : ''}>
+      <i class="fa-solid fa-chevron-right"></i>
+    </button>`;
+
+  container.innerHTML = html;
+
+  container.querySelectorAll('.page-btn[data-page]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      currentPage = parseInt(btn.dataset.page);
+      loadProducts();
+      document.getElementById('products').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
   });
-
-  // Re-run scroll reveal on new cards
-  grid.querySelectorAll('.product-card').forEach((el, i) => {
-    el.style.opacity = '0';
-    el.style.transform = 'translateY(28px)';
-    el.style.transition = `opacity .5s ease ${i * 0.07}s, transform .5s ease ${i * 0.07}s, box-shadow .35s ease`;
-    revealObserver.observe(el);
+  container.querySelector('#pagePrev')?.addEventListener('click', () => {
+    if (currentPage > 1) { currentPage--; loadProducts(); document.getElementById('products').scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+  });
+  container.querySelector('#pageNext')?.addEventListener('click', () => {
+    if (currentPage < totalPages) { currentPage++; loadProducts(); document.getElementById('products').scrollIntoView({ behavior: 'smooth', block: 'start' }); }
   });
 }
+
+// Toolbar listeners
+document.getElementById('productSearch')?.addEventListener('input', e => {
+  activeSearch  = e.target.value.trim();
+  currentPage   = 1;
+  loadProducts();
+});
+
+document.getElementById('filterBtns')?.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    activeFilter = btn.dataset.cat;
+    currentPage  = 1;
+    loadProducts();
+  });
+});
+
+document.getElementById('productSort')?.addEventListener('change', e => {
+  activeSort  = e.target.value;
+  currentPage = 1;
+  loadProducts();
+});
+
 
 
 
@@ -504,23 +613,27 @@ function openCheckoutModal() {
 }
 
 /* ===== EMAIL NOTIFICATION (EmailJS) ===== */
-function sendAdminNotification(params) {
-  // Load EmailJS SDK if not already loaded
-  if (typeof emailjs === 'undefined') {
-    const script = document.createElement('script');
-    script.src = 'https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js';
-    script.onload = () => {
-      emailjs.init(EMAILJS_PUBLIC_KEY);
-      emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, params)
-        .then(() => console.log('Admin notified ✓'))
-        .catch(err => console.warn('Email notification failed:', err));
-    };
-    document.head.appendChild(script);
-  } else {
-    emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, params)
-      .then(() => console.log('Admin notified ✓'))
-      .catch(err => console.warn('Email notification failed:', err));
+// Initialise EmailJS once on page load
+(function initEmailJS() {
+  if (typeof emailjs !== 'undefined' && EMAILJS_PUBLIC_KEY !== 'YOUR_PUBLIC_KEY') {
+    emailjs.init(EMAILJS_PUBLIC_KEY);
   }
+})();
+
+function sendAdminNotification(params) {
+  if (EMAILJS_PUBLIC_KEY === 'YOUR_PUBLIC_KEY' ||
+      EMAILJS_SERVICE_ID === 'YOUR_SERVICE_ID' ||
+      EMAILJS_TEMPLATE_ID === 'YOUR_TEMPLATE_ID') {
+    console.warn('EmailJS not configured — see EMAILJS_SETUP.md for instructions.');
+    return;
+  }
+  if (typeof emailjs === 'undefined') {
+    console.warn('EmailJS SDK not loaded.');
+    return;
+  }
+  emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, params)
+    .then(() => console.log('✓ Admin notification sent to', ADMIN_EMAIL))
+    .catch(err => console.error('✗ EmailJS error:', err));
 }
 
 /* ===== TOAST ===== */
