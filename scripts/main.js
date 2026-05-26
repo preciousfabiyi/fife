@@ -9,9 +9,9 @@ const ACCOUNT_NAME = 'Fifesbeauty Limited';
 const ADMIN_EMAIL  = 'victoriaayomide32@gmail.com';
 
 // EmailJS config — sign up free at emailjs.com, fill in your IDs
-const EMAILJS_SERVICE_ID  = 'YOUR_SERVICE_ID';
-const EMAILJS_TEMPLATE_ID = 'YOUR_TEMPLATE_ID';
-const EMAILJS_PUBLIC_KEY  = 'YOUR_PUBLIC_KEY';
+const EMAILJS_SERVICE_ID  = 'service_owqkvu8';
+const EMAILJS_TEMPLATE_ID = 'template_owqkvu8';
+const EMAILJS_PUBLIC_KEY  = 'JrK8JL9Ki1GA4yE8R';
 
 /* ===== HEADER SCROLL EFFECT ===== */
 const header = document.getElementById('header');
