@@ -593,9 +593,440 @@ button { font-family: inherit; cursor: pointer; }
 /* ============ RESPONSIVE ============ */
 @media (max-width: 768px) {
   .admin-sidebar { display: none; }
-  .admin-main { padding: 24px 16px; }
+  .admin-main { padding: 80px 16px 100px; }
   .form-row { grid-template-columns: 1fr; }
   .login-card { padding: 36px 24px; }
+}
+
+/* ============ MOBILE BOTTOM NAV ============ */
+.mobile-bottom-nav {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .mobile-bottom-nav {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 500;
+    background: var(--dark);
+    border-top: 1px solid rgba(255,255,255,.08);
+    padding: 8px 0 max(8px, env(safe-area-inset-bottom));
+    box-shadow: 0 -4px 24px rgba(0,0,0,.25);
+  }
+
+  .mobile-nav-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 4px;
+    background: none;
+    border: none;
+    color: rgba(255,255,255,.4);
+    font-family: var(--font-sans);
+    font-size: .65rem;
+    font-weight: 600;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    cursor: pointer;
+    text-decoration: none;
+    transition: color .2s ease;
+    position: relative;
+  }
+
+  .mobile-nav-item i {
+    font-size: 1.1rem;
+    transition: transform .2s ease;
+  }
+
+  .mobile-nav-item.active {
+    color: var(--rose-soft);
+  }
+
+  .mobile-nav-item.active i {
+    transform: translateY(-2px);
+  }
+
+  .mobile-nav-item.active::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 32px;
+    height: 2px;
+    background: var(--rose);
+    border-radius: 0 0 4px 4px;
+  }
+
+  .mobile-nav-badge {
+    position: absolute;
+    top: 4px;
+    right: calc(50% - 18px);
+    background: var(--rose);
+    color: #fff;
+    font-size: .55rem;
+    font-weight: 700;
+    min-width: 16px;
+    height: 16px;
+    border-radius: 50px;
+    display: inline-grid;
+    place-items: center;
+    padding: 0 4px;
+    border: 1.5px solid var(--dark);
+  }
+}
+
+/* ============ MOBILE TOPBAR ============ */
+.mobile-topbar {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .mobile-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 400;
+    background: var(--dark);
+    padding: 14px 18px max(14px, env(safe-area-inset-top));
+    box-shadow: 0 2px 16px rgba(0,0,0,.2);
+  }
+
+  .mobile-topbar-logo {
+    height: 38px;
+    object-fit: contain;
+    filter: brightness(0) invert(1) opacity(.85);
+  }
+
+  .mobile-topbar-title {
+    font-family: var(--font-serif);
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--rose-soft);
+    letter-spacing: .02em;
+  }
+
+  .mobile-topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .mobile-topbar-logout {
+    background: rgba(200,65,110,.15);
+    color: var(--rose-soft);
+    border: 1px solid rgba(200,65,110,.3);
+    border-radius: 8px;
+    padding: 7px 12px;
+    font-size: .78rem;
+    font-weight: 600;
+    font-family: var(--font-sans);
+    cursor: pointer;
+    transition: background .2s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .mobile-topbar-logout:hover { background: rgba(200,65,110,.28); }
+
+  /* Hide the desktop topbar on mobile */
+  .admin-topbar { display: none; }
+}
+
+/* ============ MOBILE PAGE HEADER ============ */
+@media (max-width: 768px) {
+  .mobile-page-header {
+    margin-bottom: 20px;
+  }
+
+  .mobile-page-header h2 {
+    font-family: var(--font-serif);
+    font-size: 1.65rem;
+    font-weight: 700;
+    color: var(--dark);
+    margin-bottom: 2px;
+  }
+
+  .mobile-page-header p {
+    font-size: .82rem;
+    color: var(--text-muted);
+  }
+}
+
+/* ============ MOBILE MANAGE PRODUCTS ============ */
+@media (max-width: 768px) {
+  .admin-card {
+    border-radius: 16px;
+    padding: 22px 18px;
+    margin-bottom: 16px;
+  }
+
+  .card-title {
+    font-size: 1.15rem;
+    margin-bottom: 20px;
+  }
+
+  /* Product grid → single column on mobile */
+  .admin-product-grid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  /* Mobile product card: horizontal layout */
+  .admin-product {
+    flex-direction: row;
+    align-items: stretch;
+    border-radius: 14px;
+  }
+
+  .admin-product-img-wrap {
+    width: 100px;
+    flex-shrink: 0;
+  }
+
+  .admin-product-img-wrap img {
+    width: 100px;
+    height: 100%;
+    min-height: 90px;
+    object-fit: cover;
+    border-radius: 14px 0 0 14px;
+  }
+
+  .product-category-badge {
+    top: 6px; left: 6px;
+    font-size: .6rem;
+    padding: 3px 8px;
+  }
+
+  .admin-product-info {
+    padding: 12px 12px 6px;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .admin-product-info h3 {
+    font-size: .9rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .admin-product-info .price {
+    font-size: .85rem;
+  }
+
+  .admin-product-actions {
+    padding: 6px 12px 12px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: flex-end;
+  }
+
+  .btn-delete-product {
+    padding: 8px 14px;
+    font-size: .78rem;
+    white-space: nowrap;
+  }
+
+  /* Search bar on mobile */
+  .manage-toolbar {
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  .search-input {
+    min-width: 0;
+    width: 100%;
+    font-size: .88rem;
+    padding: 11px 16px;
+  }
+
+  .manage-count {
+    font-size: .78rem;
+  }
+}
+
+/* ============ MOBILE ORDERS ============ */
+@media (max-width: 768px) {
+  #ordersList {
+    gap: 14px;
+  }
+
+  .order-card {
+    border-radius: 14px;
+  }
+
+  .order-header {
+    padding: 12px 14px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .order-ref {
+    font-size: .8rem;
+  }
+
+  .order-date {
+    font-size: .73rem;
+  }
+
+  .order-status {
+    font-size: .64rem;
+    padding: 3px 9px;
+  }
+
+  /* Stack order body fully on mobile */
+  .order-body {
+    grid-template-columns: 1fr;
+  }
+
+  .order-details {
+    padding: 14px 14px 10px;
+  }
+
+  .order-info-row {
+    font-size: .82rem;
+    margin-bottom: 7px;
+  }
+
+  .order-items {
+    margin-top: 12px;
+    padding-top: 10px;
+  }
+
+  .order-item-row {
+    font-size: .8rem;
+  }
+
+  .order-item-row.total-row {
+    font-size: .84rem;
+  }
+
+  /* Payment proof: horizontal strip on mobile */
+  .order-proof-wrap {
+    border-left: none;
+    border-top: 1px solid #f0e8ec;
+    padding: 12px 14px;
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+    background: var(--cream);
+  }
+
+  .order-proof-label {
+    font-size: .68rem;
+    white-space: nowrap;
+    min-width: 60px;
+  }
+
+  .order-proof-img {
+    width: 80px;
+    height: 70px;
+    flex-shrink: 0;
+    border-radius: 8px;
+  }
+
+  .order-no-proof {
+    flex-direction: row;
+    height: auto;
+    padding: 6px 0;
+    font-size: .78rem;
+  }
+
+  .order-no-proof i { font-size: 1.1rem; }
+
+  /* Action buttons: full row */
+  .order-actions {
+    padding: 10px 14px;
+    gap: 8px;
+  }
+
+  .order-btn {
+    padding: 10px;
+    font-size: .8rem;
+    border-radius: 10px;
+  }
+
+  /* Orders badge in nav */
+  .orders-badge {
+    font-size: .6rem;
+    min-width: 16px;
+    height: 16px;
+    margin-left: 4px;
+  }
+}
+
+/* ============ MOBILE ADD PRODUCT FORM ============ */
+@media (max-width: 768px) {
+  .product-form { gap: 0; }
+
+  .image-upload-zone {
+    min-height: 150px;
+  }
+
+  .upload-placeholder { padding: 24px 16px; }
+  .upload-placeholder i { font-size: 2rem; }
+  .upload-placeholder p { font-size: .88rem; }
+
+  .image-preview img { height: 180px; }
+
+  .btn-upload {
+    width: 100%;
+    justify-content: center;
+    padding: 14px;
+    font-size: .85rem;
+    margin-top: 6px;
+  }
+}
+
+/* ============ MOBILE TOAST ============ */
+@media (max-width: 768px) {
+  .toast {
+    bottom: 80px; /* above bottom nav */
+    font-size: .84rem;
+    padding: 11px 22px;
+    max-width: calc(100vw - 32px);
+    white-space: normal;
+    text-align: center;
+  }
+}
+
+/* ============ MOBILE DELETE MODAL ============ */
+@media (max-width: 768px) {
+  .del-box {
+    padding: 36px 28px;
+    border-radius: 18px;
+  }
+
+  .del-box h3 { font-size: 1.3rem; }
+  .del-box p  { font-size: .86rem; }
+  .del-actions { gap: 10px; }
+  .del-cancel, .del-confirm { padding: 12px; font-size: .86rem; }
+}
+
+/* ============ MOBILE PROOF VIEWER ============ */
+@media (max-width: 768px) {
+  .proof-viewer-inner {
+    max-width: 95vw;
+  }
+  .proof-viewer-inner img {
+    max-height: 70vh;
+    border-radius: 8px;
+  }
+  .proof-viewer-close {
+    top: -12px; right: -8px;
+    width: 32px; height: 32px;
+    font-size: .9rem;
+  }
 }
 
 /* ===== UPLOAD LOADING STATE ===== */
@@ -807,4 +1238,5 @@ button { font-family: inherit; cursor: pointer; }
 @media (max-width: 600px) {
   .order-body { grid-template-columns: 1fr; }
   .order-proof-wrap { border-left: none; border-top: 1px solid #f0e8ec; }
+  .login-card { padding: 28px 18px; }
 }
