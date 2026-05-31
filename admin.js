@@ -1,4 +1,4 @@
-/*/* ============================================
+/* ============================================
    FIFE BEAUTY HUB — Admin JS
    - Firebase Firestore for global products/orders
    - Mobile bottom nav tabs
