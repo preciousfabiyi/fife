@@ -1,11 +1,6 @@
 /* ============================================
-  FIFE BEAUTY HUB & SPA — Main JS
+   FIFE BEAUTY HUB & SPA — Main JS
 ============================================ */
-// Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
-
 // Your web app's Firebase configuration
 const firebaseConfig = {
   apiKey: "AIzaSyAk9_7mqgi22VUznizgg569SNzuoiplfKE",
@@ -15,12 +10,9 @@ const firebaseConfig = {
   messagingSenderId: "688954759472",
   appId: "1:688954759472:web:02d0c84dbab6b4a4f810f5"
 };
-
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
 /* ===== PAYMENT & NOTIFICATION CONFIG ===== */
 const BANK_NAME    = 'Moniepoint';
-const ACCOUNT_NO   = '6442284423';
+const ACCOUNT_NO   = '6442284424';
 const ACCOUNT_NAME = 'Fifesbeauty Limited';
 const ADMIN_EMAIL  = 'victoriaayomide32@gmail.com';
 
@@ -121,44 +113,45 @@ let activeFilter     = 'All';
 let activeSearch     = '';
 let activeSort       = 'newest';
 
-/* ===== FIREBASE INIT (main site) ===== */
-let _db = null;
+/* ===== FIREBASE INIT ===== */
+var _db = null;
 try {
   if (typeof firebase !== 'undefined') {
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     _db = firebase.firestore();
   }
-} catch(e) { console.warn('Firebase not available on main site:', e); }
+} catch(e) { console.warn('Firebase init failed:', e); }
 
-/* ===== LOAD PRODUCTS ===== */
-async function loadProducts() {
-  const grid = document.getElementById('productGrid');
+function loadProducts() {
+  var grid = document.getElementById('productGrid');
   if (!grid) return;
 
-  // Show loading state
-  grid.innerHTML = `<div class="no-products-msg">
-    <i class="fa-solid fa-spinner fa-spin" style="font-size:2rem;color:var(--rose);display:block;margin-bottom:12px;"></i>
-    <p>Loading products…</p>
-  </div>`;
+  // Show loading spinner
+  grid.innerHTML = '<div class="no-products-msg">' +
+    '<i class="fa-solid fa-spinner fa-spin" style="font-size:2rem;color:var(--rose);display:block;margin-bottom:12px;"></i>' +
+    '<p>Loading products…</p></div>';
 
-  let allProducts = [];
-
-  // Try Firestore first, fall back to localStorage
   if (_db) {
-    try {
-      const snap = await _db.collection('products').orderBy('createdAt', 'desc').get();
-      allProducts = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-      // Cache locally for offline fallback
-      try { localStorage.setItem('fifeProducts', JSON.stringify(allProducts)); } catch(e) {}
-    } catch(e) {
-      console.warn('Firestore read failed, using localStorage:', e);
-      allProducts = JSON.parse(localStorage.getItem('fifeProducts') || '[]');
-    }
+    // Load from Firebase
+    _db.collection('products').orderBy('createdAt', 'desc').get()
+      .then(function(snap) {
+        var allProducts = snap.docs.map(function(d) {
+          return Object.assign({ id: d.id }, d.data());
+        });
+        // Cache to localStorage as fallback
+        try { localStorage.setItem('fifeProducts', JSON.stringify(allProducts)); } catch(e) {}
+        renderProductGrid(allProducts);
+      })
+      .catch(function(e) {
+        console.warn('Firebase read failed, using localStorage:', e);
+        var allProducts = JSON.parse(localStorage.getItem('fifeProducts') || '[]');
+        renderProductGrid(allProducts);
+      });
   } else {
-    allProducts = JSON.parse(localStorage.getItem('fifeProducts') || '[]');
+    // Fallback to localStorage
+    var allProducts = JSON.parse(localStorage.getItem('fifeProducts') || '[]');
+    renderProductGrid(allProducts);
   }
-
-  renderProductGrid(allProducts);
 }
 
 function renderProductGrid(allProducts) {
@@ -197,6 +190,8 @@ function renderProductGrid(allProducts) {
 
   // 6. Render cards
   const grid = document.getElementById('productGrid');
+  if (!grid) return;
+
   if (filtered.length === 0) {
     grid.innerHTML = `
       <div class="no-products-msg">
@@ -234,6 +229,7 @@ function renderProductGrid(allProducts) {
     });
   }
 
+  // 7. Render pagination
   renderPagination(totalPages);
 }
 
