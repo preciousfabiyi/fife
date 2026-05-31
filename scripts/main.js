@@ -1,5 +1,5 @@
 /* ============================================
-   FIFE BEAUTY HUB & SPA — Main JS
+  FIFE BEAUTY HUB & SPA — Main JS
 ============================================ */
 const firebaseConfig = {
   apiKey: "AIzaSyDi8fwHOwvT_BHZTyBXSDCmh9QWaAd5298",
@@ -112,9 +112,47 @@ let activeFilter     = 'All';
 let activeSearch     = '';
 let activeSort       = 'newest';
 
-function loadProducts() {
-  const allProducts = JSON.parse(localStorage.getItem('fifeProducts') || '[]');
+/* ===== FIREBASE INIT (main site) ===== */
+let _db = null;
+try {
+  if (typeof firebase !== 'undefined') {
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    _db = firebase.firestore();
+  }
+} catch(e) { console.warn('Firebase not available on main site:', e); }
 
+/* ===== LOAD PRODUCTS ===== */
+async function loadProducts() {
+  const grid = document.getElementById('productGrid');
+  if (!grid) return;
+
+  // Show loading state
+  grid.innerHTML = `<div class="no-products-msg">
+    <i class="fa-solid fa-spinner fa-spin" style="font-size:2rem;color:var(--rose);display:block;margin-bottom:12px;"></i>
+    <p>Loading products…</p>
+  </div>`;
+
+  let allProducts = [];
+
+  // Try Firestore first, fall back to localStorage
+  if (_db) {
+    try {
+      const snap = await _db.collection('products').orderBy('createdAt', 'desc').get();
+      allProducts = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      // Cache locally for offline fallback
+      try { localStorage.setItem('fifeProducts', JSON.stringify(allProducts)); } catch(e) {}
+    } catch(e) {
+      console.warn('Firestore read failed, using localStorage:', e);
+      allProducts = JSON.parse(localStorage.getItem('fifeProducts') || '[]');
+    }
+  } else {
+    allProducts = JSON.parse(localStorage.getItem('fifeProducts') || '[]');
+  }
+
+  renderProductGrid(allProducts);
+}
+
+function renderProductGrid(allProducts) {
   // 1. Filter by category
   let filtered = activeFilter === 'All'
     ? [...allProducts]
@@ -133,7 +171,6 @@ function loadProducts() {
   if (activeSort === 'price-asc')  filtered.sort((a, b) => a.price - b.price);
   if (activeSort === 'price-desc') filtered.sort((a, b) => b.price - a.price);
   if (activeSort === 'name-asc')   filtered.sort((a, b) => a.name.localeCompare(b.name));
-  // 'newest' = default order (already newest first from admin)
 
   // 4. Result count
   const countEl = document.getElementById('productResultCount');
@@ -146,8 +183,8 @@ function loadProducts() {
   // 5. Paginate
   const totalPages = Math.max(1, Math.ceil(filtered.length / PRODUCTS_PER_PAGE));
   if (currentPage > totalPages) currentPage = 1;
-  const start   = (currentPage - 1) * PRODUCTS_PER_PAGE;
-  const paged   = filtered.slice(start, start + PRODUCTS_PER_PAGE);
+  const start = (currentPage - 1) * PRODUCTS_PER_PAGE;
+  const paged = filtered.slice(start, start + PRODUCTS_PER_PAGE);
 
   // 6. Render cards
   const grid = document.getElementById('productGrid');
@@ -161,7 +198,8 @@ function loadProducts() {
     grid.innerHTML = paged.map(p => `
       <div class="product-card">
         <div class="product-image">
-          <img src="${p.image}" alt="${p.name}" loading="lazy">
+          <img src="${p.image}" alt="${p.name}" loading="lazy"
+               onerror="this.src='https://placehold.co/400x300?text=No+Image'">
           <div class="product-overlay">
             <button class="btn-quick-add add-cart" data-name="${p.name}" data-price="${p.price}">Quick Add</button>
           </div>
@@ -179,7 +217,6 @@ function loadProducts() {
       btn.addEventListener('click', () => addToCart(btn.dataset.name, btn.dataset.price));
     });
 
-    // Scroll reveal on new cards
     grid.querySelectorAll('.product-card').forEach((el, i) => {
       el.style.opacity = '0';
       el.style.transform = 'translateY(28px)';
@@ -188,9 +225,9 @@ function loadProducts() {
     });
   }
 
-  // 7. Render pagination
   renderPagination(totalPages);
 }
+
 
 function renderPagination(totalPages) {
   const container = document.getElementById('productPagination');
