@@ -6,19 +6,15 @@
   <title>Admin — Fife Beauty Hub</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"/>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles/admin.css">
-  <!-- Firebase -->
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
+  <link rel="stylesheet" href="admin.css">
 </head>
 <body>
 
-<!-- ===== LOGIN SCREEN ===== -->
+<!-- LOGIN -->
 <div id="loginScreen" class="login-screen">
   <div class="login-card">
     <div class="login-logo">
-      <img src="fife-logo.jpg" alt="Fife Beauty Hub">
+      <img src="fife-logo.jpg" alt="Fife Beauty Hub" onerror="this.style.display='none'">
     </div>
     <h2 class="login-title">Admin Login</h2>
     <p class="login-sub">Restricted to authorized staff only.</p>
@@ -38,7 +34,7 @@
         <div class="input-icon-wrap">
           <i class="fa-solid fa-lock"></i>
           <input type="password" id="loginPass" placeholder="Admin password" autocomplete="current-password">
-          <button type="button" class="toggle-pass" id="togglePass" aria-label="Show password">
+          <button type="button" class="toggle-pass" id="togglePass">
             <i class="fa-regular fa-eye"></i>
           </button>
         </div>
@@ -51,37 +47,23 @@
   </div>
 </div>
 
-<!-- ===== ADMIN DASHBOARD ===== -->
+<!-- DASHBOARD -->
 <div id="adminDashboard" class="admin-wrapper hidden">
-
-  <!-- Desktop Sidebar -->
   <aside class="admin-sidebar">
     <div class="sidebar-brand">
-      <img src="images/fife-logo.jpg" alt="Fife" class="sidebar-logo">
+      <img src="fife-logo.jpg" alt="Fife" class="sidebar-logo" onerror="this.style.display='none'">
     </div>
     <nav class="sidebar-nav">
-      <a href="#" class="active" data-tab="addProduct">
-        <i class="fa-solid fa-plus-circle"></i> Add Product
-      </a>
-      <a href="#" data-tab="manageProducts">
-        <i class="fa-solid fa-boxes-stacked"></i> Manage Products
-      </a>
-      <a href="#" data-tab="orders">
-        <i class="fa-solid fa-receipt"></i> Orders
-        <span class="orders-badge" id="ordersBadge"></span>
-      </a>
+      <a href="#" class="active" data-tab="addProduct"><i class="fa-solid fa-plus-circle"></i> Add Product</a>
+      <a href="#" data-tab="manageProducts"><i class="fa-solid fa-boxes-stacked"></i> Manage Products</a>
+      <a href="#" data-tab="orders"><i class="fa-solid fa-receipt"></i> Orders <span class="orders-badge" id="ordersBadge"></span></a>
     </nav>
     <div class="sidebar-footer">
-      <a href="index.html" class="sidebar-link">
-        <i class="fa-solid fa-arrow-left"></i> Back to Site
-      </a>
-      <button class="btn-logout" id="logoutBtn">
-        <i class="fa-solid fa-right-from-bracket"></i> Logout
-      </button>
+      <a href="index.html" class="sidebar-link"><i class="fa-solid fa-arrow-left"></i> Back to Site</a>
+      <button class="btn-logout" id="logoutBtn"><i class="fa-solid fa-right-from-bracket"></i> Logout</button>
     </div>
   </aside>
 
-  <!-- Main -->
   <main class="admin-main">
     <div class="admin-topbar">
       <div>
@@ -90,23 +72,21 @@
       </div>
       <div class="topbar-right">
         <span class="product-count" id="productCount">0 products</span>
-        <button class="btn-logout-top" id="logoutBtnTop">
-          <i class="fa-solid fa-right-from-bracket"></i>
-        </button>
+        <button class="btn-logout-top" id="logoutBtnTop"><i class="fa-solid fa-right-from-bracket"></i></button>
       </div>
     </div>
 
-    <!-- TAB: Add Product -->
+    <!-- ADD PRODUCT TAB -->
     <section class="admin-card" id="tabAddProduct">
       <h2 class="card-title"><i class="fa-solid fa-plus"></i> Add New Product</h2>
       <form id="productForm" class="product-form" novalidate>
         <div class="form-row">
           <div class="form-group">
-            <label for="productName">Product Name</label>
+            <label>Product Name</label>
             <input type="text" id="productName" placeholder="e.g. Rose Glow Serum" required>
           </div>
           <div class="form-group">
-            <label for="productPrice">Price (₦)</label>
+            <label>Price (₦)</label>
             <input type="number" id="productPrice" placeholder="e.g. 2500" min="0" required>
           </div>
         </div>
@@ -121,14 +101,12 @@
             </div>
             <div class="image-preview hidden" id="imagePreview">
               <img id="previewImg" src="" alt="Preview">
-              <button type="button" class="remove-img" id="removeImg">
-                <i class="fa-solid fa-xmark"></i>
-              </button>
+              <button type="button" class="remove-img" id="removeImg"><i class="fa-solid fa-xmark"></i></button>
             </div>
           </div>
         </div>
         <div class="form-group">
-          <label for="productCategory">Category</label>
+          <label>Category</label>
           <select id="productCategory">
             <option value="" disabled selected>Select category</option>
             <option>Skincare</option>
@@ -138,7 +116,7 @@
           </select>
         </div>
         <div class="form-group">
-          <label for="productDesc">Description (optional)</label>
+          <label>Description (optional)</label>
           <textarea id="productDesc" placeholder="Short product description…" rows="3"></textarea>
         </div>
         <button type="submit" class="btn-upload" id="uploadBtn">
@@ -147,7 +125,7 @@
       </form>
     </section>
 
-    <!-- TAB: Manage Products -->
+    <!-- MANAGE PRODUCTS TAB -->
     <section class="admin-card hidden" id="tabManageProducts">
       <h2 class="card-title"><i class="fa-solid fa-boxes-stacked"></i> Manage Products</h2>
       <div class="manage-toolbar">
@@ -158,50 +136,36 @@
         <span id="manageCount" class="manage-count">0 products</span>
       </div>
       <div id="adminProducts" class="admin-product-grid">
-        <p class="empty-msg">No products uploaded yet.</p>
+        <p class="empty-msg">No products yet.</p>
       </div>
     </section>
 
-    <!-- TAB: Orders -->
+    <!-- ORDERS TAB -->
     <section class="admin-card hidden" id="tabOrders">
-      <h2 class="card-title"><i class="fa-solid fa-receipt"></i> Orders
-        <span class="orders-count-pill" id="ordersCountPill"></span>
-      </h2>
+      <h2 class="card-title"><i class="fa-solid fa-receipt"></i> Orders <span class="orders-count-pill" id="ordersCountPill"></span></h2>
       <div class="orders-filter-row">
         <button class="order-filter-btn active" data-status="all">All</button>
         <button class="order-filter-btn" data-status="Pending">Pending</button>
         <button class="order-filter-btn" data-status="Confirmed">Confirmed</button>
         <button class="order-filter-btn" data-status="Rejected">Rejected</button>
       </div>
-      <div id="ordersList">
-        <p class="empty-msg">No orders received yet.</p>
-      </div>
+      <div id="ordersList"><p class="empty-msg">No orders yet.</p></div>
     </section>
   </main>
 </div>
 
-<!-- Mobile Bottom Nav -->
+<!-- MOBILE BOTTOM NAV -->
 <nav class="admin-bottom-nav hidden" id="adminBottomNav">
-  <a href="#" class="active" data-tab="addProduct">
-    <i class="fa-solid fa-plus-circle"></i>
-    <span>Add</span>
-  </a>
-  <a href="#" data-tab="manageProducts">
-    <i class="fa-solid fa-boxes-stacked"></i>
-    <span>Products</span>
-  </a>
-  <a href="#" data-tab="orders">
-    <i class="fa-solid fa-receipt"></i>
-    <span>Orders</span>
-    <span class="nav-orders-badge" id="navOrdersBadge"></span>
-  </a>
+  <a href="#" class="active" data-tab="addProduct"><i class="fa-solid fa-plus-circle"></i><span>Add</span></a>
+  <a href="#" data-tab="manageProducts"><i class="fa-solid fa-boxes-stacked"></i><span>Products</span></a>
+  <a href="#" data-tab="orders"><i class="fa-solid fa-receipt"></i><span>Orders</span><span class="nav-orders-badge" id="navOrdersBadge"></span></a>
 </nav>
 
 <div class="toast" id="adminToast"></div>
 
-<!-- Delete Modal -->
+<!-- DELETE MODAL -->
 <div id="deleteModal" class="del-modal hidden">
-  <div class="del-backdrop"></div>
+  <div class="del-backdrop" id="delBackdrop"></div>
   <div class="del-box">
     <div class="del-icon"><i class="fa-solid fa-trash-can"></i></div>
     <h3>Delete Product?</h3>
@@ -213,8 +177,8 @@
   </div>
 </div>
 
-<!-- Proof Viewer -->
-<div id="proofViewerModal" class="hidden">
+<!-- PROOF VIEWER -->
+<div id="proofViewerModal" class="proof-viewer-modal hidden">
   <div class="proof-viewer-backdrop" id="proofBackdrop"></div>
   <div class="proof-viewer-inner">
     <button class="proof-viewer-close" id="proofClose"><i class="fa-solid fa-xmark"></i></button>
@@ -223,6 +187,7 @@
   </div>
 </div>
 
-<script src="scripts/admin.js"></script>
+<!-- admin.js loaded LAST so all elements exist before JS runs -->
+<script src="admin.js"></script>
 </body>
 </html>
