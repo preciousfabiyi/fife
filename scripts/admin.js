@@ -522,12 +522,18 @@ function showToast(msg) {
   toast.classList.add('show');
   setTimeout(() => toast.classList.remove('show'), 3200);
 }
+// Duplicate modular Firebase initialization removed to avoid redeclaring `firebaseConfig`.
+// This file already defines `firebaseConfig` and initializes the (namespaced) Firebase SDK earlier,
+// so keep using that initialization to prevent "Cannot redeclare block-scoped variable" errors.
 // Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
 
 // Your web app's Firebase configuration
+import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {getFirestore} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+
 const firebaseConfig = {
   apiKey: "AIzaSyDi8fwHOwvT_BHZTyBXSDCmh9QWaAd5298",
   authDomain: "fife-beauty-hub-f2d2b.firebaseapp.com",
@@ -539,3 +545,9 @@ const firebaseConfig = {
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
+
+const db = getFirestore(app);
+
+console.log('Firebase connected Successfully');
+
+export { db};
