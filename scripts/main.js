@@ -20,7 +20,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 /* ===== PAYMENT & NOTIFICATION CONFIG ===== */
 const BANK_NAME    = 'Moniepoint';
-const ACCOUNT_NO   = '6442284424';
+const ACCOUNT_NO   = '6442284423';
 const ACCOUNT_NAME = 'Fifesbeauty Limited';
 const ADMIN_EMAIL  = 'victoriaayomide32@gmail.com';
 
