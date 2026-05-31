@@ -1,15 +1,10 @@
-// FIFE BEAUTY HUB - Admin JS
+// FIFE BEAUTY HUB - Admin JS (clean version)
 
 var ADMIN_USER = 'Fife';
 var ADMIN_PASS = 'Fife1234';
 
-// Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
-
 // Your web app's Firebase configuration
-const firebaseConfig = {
+var firebaseConfig = {
   apiKey: "AIzaSyAk9_7mqgi22VUznizgg569SNzuoiplfKE",
   authDomain: "fife-beauty-hub-b41de.firebaseapp.com",
   projectId: "fife-beauty-hub-b41de",
@@ -17,19 +12,15 @@ const firebaseConfig = {
   messagingSenderId: "688954759472",
   appId: "1:688954759472:web:02d0c84dbab6b4a4f810f5"
 };
-
 var db = null;
 var useFirebase = false;
-
 try {
   if (typeof firebase !== 'undefined') {
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     db = firebase.firestore();
     useFirebase = true;
   }
-} catch(e) {
-  console.warn('Firebase error:', e);
-}
+} catch(e) { console.warn('Firebase:', e); }
 
 var products = [];
 var pendingDeleteIdx = null;
@@ -46,40 +37,93 @@ function showToast(msg) {
   setTimeout(function() { t.classList.remove('show'); }, 3000);
 }
 
-// ===== LOGIN =====
-window.addEventListener('DOMContentLoaded', function() {
+// ── Everything runs AFTER page is fully loaded ──
+document.addEventListener('DOMContentLoaded', function() {
 
+  // Auto-login if session active
   if (sessionStorage.getItem('fifeAdminLoggedIn') === 'true') {
     showDashboard();
     return;
   }
 
+  // Sign in button
   var loginBtn = g('loginBtn');
+  if (loginBtn) loginBtn.addEventListener('click', attemptLogin);
+
+  // Press Enter to login
   var loginPass = g('loginPass');
+  if (loginPass) loginPass.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') attemptLogin();
+  });
 
-  if (loginBtn) {
-    loginBtn.addEventListener('click', attemptLogin);
-  }
-
-  if (loginPass) {
-    loginPass.addEventListener('keydown', function(e) {
-      if (e.key === 'Enter') attemptLogin();
-    });
-  }
-
+  // Show/hide password
   var togglePass = g('togglePass');
-  if (togglePass) {
-    togglePass.addEventListener('click', function() {
-      var inp = g('loginPass');
-      if (!inp) return;
-      var show = inp.type === 'password';
-      inp.type = show ? 'text' : 'password';
-      var icon = togglePass.querySelector('i');
-      if (icon) icon.className = show ? 'fa-regular fa-eye-slash' : 'fa-regular fa-eye';
-    });
-  }
+  if (togglePass) togglePass.addEventListener('click', function() {
+    var inp = g('loginPass');
+    if (!inp) return;
+    inp.type = inp.type === 'password' ? 'text' : 'password';
+    var icon = togglePass.querySelector('i');
+    if (icon) icon.className = inp.type === 'text' ? 'fa-regular fa-eye-slash' : 'fa-regular fa-eye';
+  });
 
-  // Tab nav
+});
+
+function attemptLogin() {
+  var userEl = g('loginUser');
+  var passEl = g('loginPass');
+  var errEl  = g('loginError');
+  if (!userEl || !passEl) return;
+
+  var user = userEl.value.trim();
+  var pass = passEl.value.trim();
+
+  if (user === ADMIN_USER && pass === ADMIN_PASS) {
+    sessionStorage.setItem('fifeAdminLoggedIn', 'true');
+    if (errEl) errEl.classList.add('hidden');
+    showDashboard();
+  } else {
+    if (errEl) errEl.classList.remove('hidden');
+    passEl.value = '';
+    passEl.focus();
+  }
+}
+
+function showDashboard() {
+  var loginScreen    = g('loginScreen');
+  var adminDashboard = g('adminDashboard');
+  var adminBottomNav = g('adminBottomNav');
+  if (loginScreen)    loginScreen.classList.add('hidden');
+  if (adminDashboard) adminDashboard.classList.remove('hidden');
+  if (adminBottomNav) adminBottomNav.classList.remove('hidden');
+
+  // Wire up dashboard buttons (only runs once logged in)
+  wireDashboard();
+  loadProducts();
+  updateOrdersBadge();
+}
+
+function doLogout() {
+  sessionStorage.removeItem('fifeAdminLoggedIn');
+  var loginScreen    = g('loginScreen');
+  var adminDashboard = g('adminDashboard');
+  var adminBottomNav = g('adminBottomNav');
+  if (loginScreen)    loginScreen.classList.remove('hidden');
+  if (adminDashboard) adminDashboard.classList.add('hidden');
+  if (adminBottomNav) adminBottomNav.classList.add('hidden');
+  if (g('loginUser')) g('loginUser').value = '';
+  if (g('loginPass')) g('loginPass').value = '';
+}
+
+var dashboardWired = false;
+function wireDashboard() {
+  if (dashboardWired) return;
+  dashboardWired = true;
+
+  // Logout
+  if (g('logoutBtn'))    g('logoutBtn').addEventListener('click', doLogout);
+  if (g('logoutBtnTop')) g('logoutBtnTop').addEventListener('click', doLogout);
+
+  // Tabs — sidebar + bottom nav
   document.querySelectorAll('[data-tab]').forEach(function(link) {
     link.addEventListener('click', function(e) {
       e.preventDefault();
@@ -87,203 +131,111 @@ window.addEventListener('DOMContentLoaded', function() {
     });
   });
 
-  // Logout buttons
-  var logoutBtn = g('logoutBtn');
-  var logoutBtnTop = g('logoutBtnTop');
-  if (logoutBtn) logoutBtn.addEventListener('click', doLogout);
-  if (logoutBtnTop) logoutBtnTop.addEventListener('click', doLogout);
-
   // Delete modal
-  var delCancel = g('delCancel');
-  var delBackdrop = g('delBackdrop');
-  var delConfirm = g('delConfirm');
-  if (delCancel) delCancel.addEventListener('click', function() {
+  if (g('delCancel')) g('delCancel').addEventListener('click', function() {
     g('deleteModal').classList.add('hidden');
     pendingDeleteIdx = null;
   });
-  if (delBackdrop) delBackdrop.addEventListener('click', function() {
+  if (g('delBackdrop')) g('delBackdrop').addEventListener('click', function() {
     g('deleteModal').classList.add('hidden');
     pendingDeleteIdx = null;
   });
-  if (delConfirm) delConfirm.addEventListener('click', function() {
-    if (pendingDeleteIdx === null) return;
-    var name = products[pendingDeleteIdx] ? products[pendingDeleteIdx].name : '';
-    products.splice(pendingDeleteIdx, 1);
-    saveProductsLocal();
-    updateCount();
-    renderProducts();
-    g('deleteModal').classList.add('hidden');
-    pendingDeleteIdx = null;
-    showToast('"' + name + '" deleted.');
-  });
+  if (g('delConfirm')) g('delConfirm').addEventListener('click', confirmDelete);
 
-  // Image upload
-  var uploadZone = g('uploadZone');
-  var productImage = g('productImage');
-  if (uploadZone && productImage) {
-    uploadZone.addEventListener('click', function() { productImage.click(); });
-    uploadZone.addEventListener('dragover', function(e) {
-      e.preventDefault();
-      uploadZone.classList.add('drag-over');
+  // Image upload zone
+  if (g('uploadZone') && g('productImage')) {
+    g('uploadZone').addEventListener('click', function() { g('productImage').click(); });
+    g('uploadZone').addEventListener('dragover', function(e) {
+      e.preventDefault(); g('uploadZone').classList.add('drag-over');
     });
-    uploadZone.addEventListener('dragleave', function() {
-      uploadZone.classList.remove('drag-over');
+    g('uploadZone').addEventListener('dragleave', function() {
+      g('uploadZone').classList.remove('drag-over');
     });
-    uploadZone.addEventListener('drop', function(e) {
-      e.preventDefault();
-      uploadZone.classList.remove('drag-over');
+    g('uploadZone').addEventListener('drop', function(e) {
+      e.preventDefault(); g('uploadZone').classList.remove('drag-over');
       if (e.dataTransfer.files[0]) handleImageFile(e.dataTransfer.files[0]);
     });
-    productImage.addEventListener('change', function() {
-      if (productImage.files[0]) handleImageFile(productImage.files[0]);
+    g('productImage').addEventListener('change', function() {
+      if (g('productImage').files[0]) handleImageFile(g('productImage').files[0]);
     });
   }
 
-  var removeImg = g('removeImg');
-  if (removeImg) {
-    removeImg.addEventListener('click', function(e) {
-      e.stopPropagation();
-      imageBase64 = null;
-      if (g('productImage')) g('productImage').value = '';
-      if (g('previewImg')) g('previewImg').src = '';
-      if (g('imagePreview')) g('imagePreview').classList.add('hidden');
-      if (g('uploadPlaceholder')) g('uploadPlaceholder').classList.remove('hidden');
-    });
-  }
+  if (g('removeImg')) g('removeImg').addEventListener('click', function(e) {
+    e.stopPropagation();
+    imageBase64 = null;
+    if (g('productImage')) g('productImage').value = '';
+    if (g('previewImg'))   g('previewImg').src = '';
+    if (g('imagePreview'))     g('imagePreview').classList.add('hidden');
+    if (g('uploadPlaceholder')) g('uploadPlaceholder').classList.remove('hidden');
+  });
 
-  // Product form
-  var productForm = g('productForm');
-  if (productForm) {
-    productForm.addEventListener('submit', function(e) {
-      e.preventDefault();
-      submitProduct();
-    });
-  }
+  // Product form submit
+  if (g('productForm')) g('productForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    submitProduct();
+  });
 
   // Search
-  var searchInput = g('searchProducts');
-  if (searchInput) {
-    searchInput.addEventListener('input', function() {
-      renderProducts(searchInput.value);
-    });
-  }
+  if (g('searchProducts')) g('searchProducts').addEventListener('input', function() {
+    renderProducts(g('searchProducts').value);
+  });
 
-  // Order filters
+  // Order filter tabs
   document.querySelectorAll('.order-filter-btn').forEach(function(btn) {
     btn.addEventListener('click', function() {
-      document.querySelectorAll('.order-filter-btn').forEach(function(b) {
-        b.classList.remove('active');
-      });
+      document.querySelectorAll('.order-filter-btn').forEach(function(b) { b.classList.remove('active'); });
       btn.classList.add('active');
       activeOrderFilter = btn.dataset.status;
       renderOrders();
     });
   });
 
-  // Proof viewer
-  var proofBackdrop = g('proofBackdrop');
-  var proofClose = g('proofClose');
-  if (proofBackdrop) proofBackdrop.addEventListener('click', function() {
+  // Proof viewer close
+  if (g('proofBackdrop')) g('proofBackdrop').addEventListener('click', function() {
     g('proofViewerModal').classList.add('hidden');
   });
-  if (proofClose) proofClose.addEventListener('click', function() {
+  if (g('proofClose')) g('proofClose').addEventListener('click', function() {
     g('proofViewerModal').classList.add('hidden');
   });
-
-});
-
-function attemptLogin() {
-  var userInput = g('loginUser');
-  var passInput = g('loginPass');
-  var loginError = g('loginError');
-
-  if (!userInput || !passInput) {
-    alert('Login form not found. Please refresh the page.');
-    return;
-  }
-
-  var user = userInput.value.trim();
-  var pass = passInput.value.trim();
-
-  if (user === ADMIN_USER && pass === ADMIN_PASS) {
-    sessionStorage.setItem('fifeAdminLoggedIn', 'true');
-    if (loginError) loginError.classList.add('hidden');
-    showDashboard();
-  } else {
-    if (loginError) loginError.classList.remove('hidden');
-    passInput.value = '';
-    passInput.focus();
-  }
 }
 
-function showDashboard() {
-  var loginScreen = g('loginScreen');
-  var adminDashboard = g('adminDashboard');
-  var adminBottomNav = g('adminBottomNav');
-  if (loginScreen) loginScreen.classList.add('hidden');
-  if (adminDashboard) adminDashboard.classList.remove('hidden');
-  if (adminBottomNav) adminBottomNav.classList.remove('hidden');
-  loadProducts();
-  updateOrdersBadge();
-}
-
-function doLogout() {
-  sessionStorage.removeItem('fifeAdminLoggedIn');
-  var loginScreen = g('loginScreen');
-  var adminDashboard = g('adminDashboard');
-  var adminBottomNav = g('adminBottomNav');
-  if (loginScreen) loginScreen.classList.remove('hidden');
-  if (adminDashboard) adminDashboard.classList.add('hidden');
-  if (adminBottomNav) adminBottomNav.classList.add('hidden');
-  if (g('loginUser')) g('loginUser').value = '';
-  if (g('loginPass')) g('loginPass').value = '';
-}
-
-// ===== TABS =====
+// ── TABS ──
 function switchTab(tab) {
   document.querySelectorAll('[data-tab]').forEach(function(a) {
     a.classList.toggle('active', a.dataset.tab === tab);
   });
   ['tabAddProduct','tabManageProducts','tabOrders'].forEach(function(id) {
-    var el = g(id);
-    if (el) el.classList.add('hidden');
+    if (g(id)) g(id).classList.add('hidden');
   });
-  var tabTitle = g('tabTitle');
   if (tab === 'addProduct') {
-    g('tabAddProduct').classList.remove('hidden');
-    if (tabTitle) tabTitle.textContent = 'Add Product';
+    if (g('tabAddProduct')) g('tabAddProduct').classList.remove('hidden');
+    if (g('tabTitle')) g('tabTitle').textContent = 'Add Product';
   } else if (tab === 'manageProducts') {
-    g('tabManageProducts').classList.remove('hidden');
-    if (tabTitle) tabTitle.textContent = 'Manage Products';
+    if (g('tabManageProducts')) g('tabManageProducts').classList.remove('hidden');
+    if (g('tabTitle')) g('tabTitle').textContent = 'Manage Products';
     renderProducts();
   } else if (tab === 'orders') {
-    g('tabOrders').classList.remove('hidden');
-    if (tabTitle) tabTitle.textContent = 'Orders';
+    if (g('tabOrders')) g('tabOrders').classList.remove('hidden');
+    if (g('tabTitle')) g('tabTitle').textContent = 'Orders';
     renderOrders();
   }
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-// ===== PRODUCTS =====
+// ── PRODUCTS ──
 function loadProducts() {
   if (useFirebase && db) {
-    db.collection('products').orderBy('createdAt', 'desc').get().then(function(snap) {
-      products = snap.docs.map(function(d) {
-        return Object.assign({ id: d.id }, d.data());
-      });
+    db.collection('products').orderBy('createdAt','desc').get().then(function(snap) {
+      products = snap.docs.map(function(d) { return Object.assign({ id: d.id }, d.data()); });
       try { localStorage.setItem('fifeProducts', JSON.stringify(products)); } catch(e) {}
-      updateCount();
-      renderProducts();
-    }).catch(function(e) {
-      console.warn('Firestore load failed, using localStorage:', e);
+      updateCount(); renderProducts();
+    }).catch(function() {
       products = JSON.parse(localStorage.getItem('fifeProducts') || '[]');
-      updateCount();
-      renderProducts();
+      updateCount(); renderProducts();
     });
   } else {
     products = JSON.parse(localStorage.getItem('fifeProducts') || '[]');
-    updateCount();
-    renderProducts();
+    updateCount(); renderProducts();
   }
 }
 
@@ -291,68 +243,15 @@ function saveProductsLocal() {
   try { localStorage.setItem('fifeProducts', JSON.stringify(products)); } catch(e) {}
 }
 
-function submitProduct() {
-  var name     = (g('productName').value || '').trim();
-  var price    = (g('productPrice').value || '').trim();
-  var category = g('productCategory').value || 'General';
-  var desc     = g('productDesc') ? (g('productDesc').value || '').trim() : '';
-
-  if (!name || !price) { showToast('Please enter name and price.'); return; }
-  if (!imageBase64)    { showToast('Please upload a product image.'); return; }
-
-  var btn = g('uploadBtn');
-  if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving…'; }
-
-  var product = { name: name, price: Number(price), image: imageBase64, category: category, desc: desc };
-
-  if (useFirebase && db) {
-    var productToSave = Object.assign({}, product, {
-      createdAt: firebase.firestore.FieldValue.serverTimestamp()
-    });
-    db.collection('products').add(productToSave).then(function(ref) {
-      product.id = ref.id;
-      products.unshift(product);
-      saveProductsLocal();
-      updateCount();
-      renderProducts();
-      resetProductForm(btn, name);
-    }).catch(function(e) {
-      console.warn('Firestore save failed:', e);
-      products.unshift(product);
-      saveProductsLocal();
-      updateCount();
-      renderProducts();
-      resetProductForm(btn, name);
-    });
-  } else {
-    products.unshift(product);
-    saveProductsLocal();
-    updateCount();
-    renderProducts();
-    resetProductForm(btn, name);
-  }
-}
-
-function resetProductForm(btn, name) {
-  if (g('productForm')) g('productForm').reset();
-  imageBase64 = null;
-  if (g('previewImg')) g('previewImg').src = '';
-  if (g('imagePreview')) g('imagePreview').classList.add('hidden');
-  if (g('uploadPlaceholder')) g('uploadPlaceholder').classList.remove('hidden');
-  if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-upload"></i> Upload Product'; }
-  showToast('"' + name + '" added successfully!');
-}
-
 function updateCount() {
   var n = products.length;
-  var txt = n + ' product' + (n !== 1 ? 's' : '');
-  if (g('productCount')) g('productCount').textContent = txt;
-  if (g('manageCount'))  g('manageCount').textContent  = txt;
+  var t = n + ' product' + (n !== 1 ? 's' : '');
+  if (g('productCount')) g('productCount').textContent = t;
+  if (g('manageCount'))  g('manageCount').textContent  = t;
 }
 
 function renderProducts(filter) {
-  var searchEl = g('searchProducts');
-  var q = (filter !== undefined ? filter : (searchEl ? searchEl.value : '')).toLowerCase();
+  var q = ((filter !== undefined ? filter : (g('searchProducts') ? g('searchProducts').value : ''))||'').toLowerCase();
   var list = q ? products.filter(function(p) {
     return p.name.toLowerCase().includes(q) || (p.category||'').toLowerCase().includes(q);
   }) : products;
@@ -368,8 +267,8 @@ function renderProducts(filter) {
   }
 
   grid.innerHTML = list.map(function(p) {
-    var realIdx = products.indexOf(p);
-    return '<div class="admin-product">' +
+    var idx = products.indexOf(p);
+    return '<div class="admin-product" id="prod-' + idx + '">' +
       '<div class="admin-product-img-wrap">' +
         '<img src="' + p.image + '" alt="' + p.name + '" loading="lazy" onerror="this.src=\'https://placehold.co/300x200?text=No+Image\'">' +
         '<span class="product-category-badge">' + (p.category || 'General') + '</span>' +
@@ -379,7 +278,7 @@ function renderProducts(filter) {
         '<p class="price">&#8358;' + Number(p.price).toLocaleString() + '</p>' +
       '</div>' +
       '<div class="admin-product-actions">' +
-        '<button class="btn-delete-product" data-idx="' + realIdx + '" data-id="' + (p.id||'') + '">' +
+        '<button class="btn-delete-product" data-idx="' + idx + '" data-id="' + (p.id||'') + '">' +
           '<i class="fa-solid fa-trash-can"></i> Delete' +
         '</button>' +
       '</div>' +
@@ -391,44 +290,70 @@ function renderProducts(filter) {
       pendingDeleteIdx = parseInt(btn.dataset.idx);
       var p = products[pendingDeleteIdx];
       if (g('delProductName')) g('delProductName').textContent = '"' + (p ? p.name : '') + '" will be permanently removed.';
+      var card = g('prod-' + pendingDeleteIdx);
+      if (card) card.style.outline = '2px solid #c0392b';
       if (g('deleteModal')) g('deleteModal').classList.remove('hidden');
     });
   });
 }
 
-// ===== IMAGE COMPRESSION =====
+function confirmDelete() {
+  if (pendingDeleteIdx === null) return;
+  var product = products[pendingDeleteIdx];
+  if (!product) return;
+  var name = product.name;
+  var firestoreId = product.id || null;
+
+  // Animate card out
+  var card = g('prod-' + pendingDeleteIdx);
+  if (card) { card.style.opacity = '0'; card.style.transform = 'scale(0.9)'; card.style.transition = 'all 0.2s'; }
+
+  // Remove from array and save immediately
+  products.splice(pendingDeleteIdx, 1);
+  saveProductsLocal();
+  updateCount();
+
+  // Close modal instantly
+  if (g('deleteModal')) g('deleteModal').classList.add('hidden');
+  pendingDeleteIdx = null;
+
+  // Re-render after animation
+  setTimeout(function() { renderProducts(); showToast('"' + name + '" deleted.'); }, 220);
+
+  // Delete from Firestore in background
+  if (useFirebase && db && firestoreId) {
+    db.collection('products').doc(firestoreId).delete().catch(function(e) { console.warn('Firestore delete:', e); });
+  }
+}
+
+// ── IMAGE UPLOAD & COMPRESS ──
 function handleImageFile(file) {
   if (!file.type.startsWith('image/')) { showToast('Please select an image file.'); return; }
-  if (file.size > 15 * 1024 * 1024)   { showToast('Image must be under 15MB.');    return; }
+  if (file.size > 15 * 1024 * 1024)   { showToast('Image must be under 15MB.'); return; }
 
-  var placeholder = g('uploadPlaceholder');
-  var preview = g('imagePreview');
-  if (placeholder) {
-    placeholder.classList.remove('hidden');
-    placeholder.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i><p>Compressing…</p>';
+  if (g('uploadPlaceholder')) {
+    g('uploadPlaceholder').classList.remove('hidden');
+    g('uploadPlaceholder').innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i><p>Compressing…</p>';
   }
-  if (preview) preview.classList.add('hidden');
+  if (g('imagePreview')) g('imagePreview').classList.add('hidden');
 
   var reader = new FileReader();
   reader.onload = function(ev) {
     var img = new Image();
     img.onload = function() {
-      var MAX = 800;
-      var w = img.width, h = img.height;
-      if (w > h && w > MAX) { h = Math.round(h * MAX / w); w = MAX; }
-      else if (h > MAX)     { w = Math.round(w * MAX / h); h = MAX; }
-
+      var MAX = 800, w = img.width, h = img.height;
+      if (w > h && w > MAX) { h = Math.round(h*MAX/w); w = MAX; }
+      else if (h > MAX)     { w = Math.round(w*MAX/h); h = MAX; }
       var canvas = document.createElement('canvas');
       canvas.width = w; canvas.height = h;
       canvas.getContext('2d').drawImage(img, 0, 0, w, h);
       imageBase64 = canvas.toDataURL('image/jpeg', 0.75);
-
       if (g('previewImg')) g('previewImg').src = imageBase64;
-      if (placeholder) {
-        placeholder.classList.add('hidden');
-        placeholder.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i><p>Tap or drag to upload image</p><span>PNG, JPG, WEBP — max 15MB</span>';
+      if (g('uploadPlaceholder')) {
+        g('uploadPlaceholder').classList.add('hidden');
+        g('uploadPlaceholder').innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i><p>Tap or drag to upload image</p><span>PNG, JPG, WEBP — max 15MB</span>';
       }
-      if (preview) preview.classList.remove('hidden');
+      if (g('imagePreview')) g('imagePreview').classList.remove('hidden');
       showToast('Image ready ✓');
     };
     img.src = ev.target.result;
@@ -436,37 +361,80 @@ function handleImageFile(file) {
   reader.readAsDataURL(file);
 }
 
-// ===== ORDERS =====
+// ── ADD PRODUCT ──
+function submitProduct() {
+  var name     = (g('productName') ? g('productName').value : '').trim();
+  var price    = (g('productPrice') ? g('productPrice').value : '').trim();
+  var category = g('productCategory') ? (g('productCategory').value || 'General') : 'General';
+  var desc     = g('productDesc') ? (g('productDesc').value || '').trim() : '';
+
+  if (!name || !price) { showToast('Please enter name and price.'); return; }
+  if (!imageBase64)    { showToast('Please upload a product image.'); return; }
+
+  var btn = g('uploadBtn');
+  if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving…'; }
+
+  var product = { name: name, price: Number(price), image: imageBase64, category: category, desc: desc };
+
+  function onSaved() {
+    if (g('productForm')) g('productForm').reset();
+    imageBase64 = null;
+    if (g('previewImg')) g('previewImg').src = '';
+    if (g('imagePreview')) g('imagePreview').classList.add('hidden');
+    if (g('uploadPlaceholder')) g('uploadPlaceholder').classList.remove('hidden');
+    if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-upload"></i> Upload Product'; }
+    showToast('"' + name + '" added!');
+  }
+
+  if (useFirebase && db) {
+    var toSave = Object.assign({}, product, { createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+    db.collection('products').add(toSave).then(function(ref) {
+      product.id = ref.id;
+      products.unshift(product);
+      saveProductsLocal();
+      updateCount();
+      onSaved();
+    }).catch(function(e) {
+      console.warn('Firestore save error:', e);
+      products.unshift(product);
+      saveProductsLocal();
+      updateCount();
+      onSaved();
+    });
+  } else {
+    products.unshift(product);
+    saveProductsLocal();
+    updateCount();
+    onSaved();
+  }
+}
+
+// ── ORDERS ──
 function renderOrders() {
-  var ordersList = g('ordersList');
-  if (!ordersList) return;
-  ordersList.innerHTML = '<div class="orders-loading"><i class="fa-solid fa-spinner fa-spin"></i><p>Loading…</p></div>';
+  var ol = g('ordersList');
+  if (!ol) return;
+  ol.innerHTML = '<div class="orders-loading"><i class="fa-solid fa-spinner fa-spin"></i><p>Loading…</p></div>';
 
   var orders = JSON.parse(localStorage.getItem('fifeOrders') || '[]');
   updateOrdersBadge(orders.length);
-
-  var pill = g('ordersCountPill');
-  if (pill) pill.textContent = orders.length > 0 ? orders.length : '';
+  if (g('ordersCountPill')) g('ordersCountPill').textContent = orders.length || '';
 
   var filtered = activeOrderFilter === 'all' ? orders : orders.filter(function(o) {
     return (o.status || 'Pending') === activeOrderFilter;
   });
 
-  if (filtered.length === 0) {
-    ordersList.innerHTML = '<p class="empty-msg">No orders in this category.</p>';
-    return;
-  }
+  if (!filtered.length) { ol.innerHTML = '<p class="empty-msg">No orders here.</p>'; return; }
 
-  ordersList.innerHTML = filtered.map(function(o, idx) {
-    var realIdx = orders.indexOf(o);
-    var status = o.status || 'Pending';
-    return '<div class="order-card" id="ocard-' + idx + '">' +
+  ol.innerHTML = filtered.map(function(o) {
+    var ri = orders.indexOf(o);
+    var st = o.status || 'Pending';
+    return '<div class="order-card">' +
       '<div class="order-header">' +
         '<div class="order-ref-wrap">' +
           '<span class="order-ref">' + o.ref + '</span>' +
-          '<span class="order-status status-' + status.toLowerCase() + '">' + status + '</span>' +
+          '<span class="order-status status-' + st.toLowerCase() + '">' + st + '</span>' +
         '</div>' +
-        '<span class="order-date">' + (o.date || '') + '</span>' +
+        '<span class="order-date">' + (o.date||'') + '</span>' +
       '</div>' +
       '<div class="order-body">' +
         '<div class="order-details">' +
@@ -475,40 +443,28 @@ function renderOrders() {
           '<div class="order-info-row"><i class="fa-solid fa-location-dot"></i><span>' + o.address + '</span></div>' +
           '<div class="order-info-row"><i class="fa-solid fa-credit-card"></i><span>' + o.payment + '</span></div>' +
           '<div class="order-items">' +
-            (o.items||[]).map(function(i) {
-              return '<div class="order-item-row"><span>' + i.name + (i.qty > 1 ? ' x' + i.qty : '') + '</span><span>&#8358;' + (i.price * i.qty).toLocaleString() + '</span></div>';
-            }).join('') +
+            (o.items||[]).map(function(i){ return '<div class="order-item-row"><span>' + i.name + (i.qty>1?' x'+i.qty:'') + '</span><span>&#8358;' + (i.price*i.qty).toLocaleString() + '</span></div>'; }).join('') +
             '<div class="order-item-row total-row"><span>Total</span><strong>&#8358;' + Number(o.total).toLocaleString() + '</strong></div>' +
           '</div>' +
         '</div>' +
         (o.proof && o.proof.startsWith('data:image') ?
-          '<div class="order-proof-wrap">' +
-            '<p class="order-proof-label">Payment Screenshot</p>' +
-            '<img src="' + o.proof + '" class="order-proof-img" data-idx="' + realIdx + '">' +
-          '</div>' : '') +
+          '<div class="order-proof-wrap"><p class="order-proof-label">Payment Screenshot</p><img src="' + o.proof + '" class="order-proof-img" data-idx="' + ri + '"></div>' : '') +
       '</div>' +
       '<div class="order-actions">' +
-        '<button class="order-btn btn-confirm' + (status==='Confirmed'?' is-done':'') + '" data-idx="' + realIdx + '" data-status="Confirmed"' + (status==='Confirmed'?' disabled':'') + '>' +
-          '<i class="fa-solid fa-check"></i> ' + (status==='Confirmed'?'Confirmed':'Confirm') +
-        '</button>' +
-        '<button class="order-btn btn-reject' + (status==='Rejected'?' is-done':'') + '" data-idx="' + realIdx + '" data-status="Rejected"' + (status==='Rejected'?' disabled':'') + '>' +
-          '<i class="fa-solid fa-xmark"></i> ' + (status==='Rejected'?'Rejected':'Reject') +
-        '</button>' +
+        '<button class="order-btn btn-confirm' + (st==='Confirmed'?' is-done':'') + '" data-idx="' + ri + '" data-status="Confirmed"' + (st==='Confirmed'?' disabled':'') + '><i class="fa-solid fa-check"></i> ' + (st==='Confirmed'?'Confirmed':'Confirm') + '</button>' +
+        '<button class="order-btn btn-reject' + (st==='Rejected'?' is-done':'') + '" data-idx="' + ri + '" data-status="Rejected"' + (st==='Rejected'?' disabled':'') + '><i class="fa-solid fa-xmark"></i> ' + (st==='Rejected'?'Rejected':'Reject') + '</button>' +
       '</div>' +
     '</div>';
   }).join('');
 
-  // Fast status buttons
-  ordersList.querySelectorAll('.order-btn').forEach(function(btn) {
+  ol.querySelectorAll('.order-btn').forEach(function(btn) {
     btn.addEventListener('click', function() {
       if (btn.disabled) return;
-      var idx = parseInt(btn.dataset.idx);
-      var status = btn.dataset.status;
+      var idx = parseInt(btn.dataset.idx), status = btn.dataset.status;
       var orders = JSON.parse(localStorage.getItem('fifeOrders') || '[]');
       if (!orders[idx]) return;
       orders[idx].status = status;
       localStorage.setItem('fifeOrders', JSON.stringify(orders));
-
       var card = btn.closest('.order-card');
       var badge = card.querySelector('.order-status');
       if (badge) { badge.textContent = status; badge.className = 'order-status status-' + status.toLowerCase(); }
@@ -518,25 +474,20 @@ function renderOrders() {
     });
   });
 
-  // Proof viewer
-  ordersList.querySelectorAll('.order-proof-img').forEach(function(img) {
+  ol.querySelectorAll('.order-proof-img').forEach(function(img) {
     img.addEventListener('click', function() {
-      var viewer = g('proofViewerModal');
-      var viewerImg = g('proofViewerImg');
-      var viewerLabel = g('proofViewerLabel');
-      if (viewerImg) viewerImg.src = img.src;
       var orders = JSON.parse(localStorage.getItem('fifeOrders') || '[]');
       var o = orders[parseInt(img.dataset.idx)];
-      if (viewerLabel && o) viewerLabel.textContent = o.name + ' · ' + o.ref;
-      if (viewer) viewer.classList.remove('hidden');
+      if (g('proofViewerImg')) g('proofViewerImg').src = img.src;
+      if (g('proofViewerLabel') && o) g('proofViewerLabel').textContent = o.name + ' · ' + o.ref;
+      if (g('proofViewerModal')) g('proofViewerModal').classList.remove('hidden');
     });
   });
 }
 
 function updateOrdersBadge(count) {
-  var n = count !== undefined ? count : JSON.parse(localStorage.getItem('fifeOrders') || '[]').length;
+  var n = count !== undefined ? count : JSON.parse(localStorage.getItem('fifeOrders')||'[]').length;
   ['ordersBadge','navOrdersBadge'].forEach(function(id) {
-    var el = g(id);
-    if (el) el.textContent = n > 0 ? n : '';
+    var el = g(id); if (el) el.textContent = n > 0 ? n : '';
   });
 }
