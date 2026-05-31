@@ -3,14 +3,21 @@
 var ADMIN_USER = 'Fife';
 var ADMIN_PASS = 'Fife1234';
 
-var firebaseConfig = {
-  apiKey: "AIzaSyDi8fwHOwvT_BHZTyBXSDCmh9QWaAd5298",
-  authDomain: "fife-beauty-hub-f2d2b.firebaseapp.com",
-  projectId: "fife-beauty-hub-f2d2b",
-  storageBucket: "fife-beauty-hub-f2d2b.firebasestorage.app",
-  messagingSenderId: "392678495728",
-  appId: "1:392678495728:web:1b5f05d3217bf3ae6df935"
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// Your web app's Firebase configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyAk9_7mqgi22VUznizgg569SNzuoiplfKE",
+  authDomain: "fife-beauty-hub-b41de.firebaseapp.com",
+  projectId: "fife-beauty-hub-b41de",
+  storageBucket: "fife-beauty-hub-b41de.firebasestorage.app",
+  messagingSenderId: "688954759472",
+  appId: "1:688954759472:web:02d0c84dbab6b4a4f810f5"
 };
+
 
 var db = null;
 var useFirebase = false;
