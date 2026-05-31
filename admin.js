@@ -18,7 +18,6 @@ const firebaseConfig = {
   appId: "1:688954759472:web:02d0c84dbab6b4a4f810f5"
 };
 
-
 var db = null;
 var useFirebase = false;
 

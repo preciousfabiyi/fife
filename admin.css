@@ -522,3 +522,13 @@ textarea { font-family: inherit; resize: vertical; }
   border: none; border-radius: 50%; display: grid;
   place-items: center; font-size: .95rem; cursor: pointer;
 }
+
+/* ===== DELETE ANIMATION ===== */
+.admin-product {
+  transition: opacity .25s ease, transform .25s ease, box-shadow .25s ease;
+}
+.admin-product.deleting {
+  opacity: 0;
+  transform: scale(.92);
+  pointer-events: none;
+}
