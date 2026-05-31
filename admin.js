@@ -4,7 +4,7 @@ var ADMIN_USER = 'Fife';
 var ADMIN_PASS = 'Fife1234';
 
 // Your web app's Firebase configuration
-var firebaseConfig = {
+const firebaseConfig = {
   apiKey: "AIzaSyAk9_7mqgi22VUznizgg569SNzuoiplfKE",
   authDomain: "fife-beauty-hub-b41de.firebaseapp.com",
   projectId: "fife-beauty-hub-b41de",
@@ -12,6 +12,7 @@ var firebaseConfig = {
   messagingSenderId: "688954759472",
   appId: "1:688954759472:web:02d0c84dbab6b4a4f810f5"
 };
+
 var db = null;
 var useFirebase = false;
 try {
@@ -118,6 +119,10 @@ var dashboardWired = false;
 function wireDashboard() {
   if (dashboardWired) return;
   dashboardWired = true;
+
+  // Migrate old localStorage products to Firebase
+  checkMigrateBanner();
+  if (g('migrateBtn')) g('migrateBtn').addEventListener('click', migrateProducts);
 
   // Logout
   if (g('logoutBtn'))    g('logoutBtn').addEventListener('click', doLogout);
@@ -490,4 +495,72 @@ function updateOrdersBadge(count) {
   ['ordersBadge','navOrdersBadge'].forEach(function(id) {
     var el = g(id); if (el) el.textContent = n > 0 ? n : '';
   });
+}
+
+// ── MIGRATE OLD PRODUCTS ──
+function checkMigrateBanner() {
+  var banner = g('migrateBanner');
+  if (!banner) return;
+
+  // Only show if: Firebase is on AND there are localStorage products
+  var local = JSON.parse(localStorage.getItem('fifeProducts') || '[]');
+  if (useFirebase && db && local.length > 0) {
+    banner.style.display = 'flex';
+  } else {
+    banner.style.display = 'none';
+  }
+}
+
+function migrateProducts() {
+  var btn = g('migrateBtn');
+  var local = JSON.parse(localStorage.getItem('fifeProducts') || '[]');
+
+  if (!local.length) { showToast('No local products to migrate.'); return; }
+  if (!useFirebase || !db) { showToast('Firebase not connected.'); return; }
+
+  if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Migrating…'; }
+
+  var total = local.length;
+  var done  = 0;
+  var failed = 0;
+
+  local.forEach(function(p) {
+    // Don't re-upload if already has a Firestore ID
+    if (p.id) { done++; checkDone(); return; }
+
+    var toSave = Object.assign({}, p, {
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    delete toSave.id;
+
+    db.collection('products').add(toSave).then(function(ref) {
+      p.id = ref.id;
+      done++;
+      checkDone();
+    }).catch(function(e) {
+      console.warn('Migration failed for:', p.name, e);
+      failed++;
+      done++;
+      checkDone();
+    });
+  });
+
+  function checkDone() {
+    if (done < total) return;
+
+    // Update localStorage with Firestore IDs
+    try { localStorage.setItem('fifeProducts', JSON.stringify(local)); } catch(e) {}
+
+    if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> Migrate Now'; }
+
+    if (failed === 0) {
+      showToast('✓ All ' + total + ' products migrated to Firebase!');
+      // Hide banner — migration complete
+      if (g('migrateBanner')) g('migrateBanner').style.display = 'none';
+      // Reload from Firebase so grid is fresh
+      loadProducts();
+    } else {
+      showToast((total - failed) + ' migrated, ' + failed + ' failed. Try again.');
+    }
+  }
 }

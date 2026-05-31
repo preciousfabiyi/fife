@@ -99,6 +99,20 @@
     <!-- TAB: Add Product -->
     <section class="admin-card" id="tabAddProduct">
       <h2 class="card-title"><i class="fa-solid fa-plus"></i> Add New Product</h2>
+
+      <!-- Migrate old products banner -->
+      <div class="migrate-banner" id="migrateBanner">
+        <div class="migrate-text">
+          <i class="fa-solid fa-box-archive"></i>
+          <div>
+            <strong>Old products found on this device</strong>
+            <p>Push them to Firebase so they show on all devices.</p>
+          </div>
+        </div>
+        <button class="btn-migrate" id="migrateBtn">
+          <i class="fa-solid fa-cloud-arrow-up"></i> Migrate Now
+        </button>
+      </div>
       <form id="productForm" class="product-form" novalidate>
         <div class="form-row">
           <div class="form-group">

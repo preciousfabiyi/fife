@@ -532,3 +532,70 @@ textarea { font-family: inherit; resize: vertical; }
   transform: scale(.92);
   pointer-events: none;
 }
+
+/* ===== MIGRATE BANNER ===== */
+.migrate-banner {
+  display: none; /* shown by JS only when needed */
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  background: linear-gradient(135deg, #fff8e1, #fff3cd);
+  border: 1.5px solid #f0c040;
+  border-radius: var(--radius);
+  padding: 16px 20px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+.migrate-text {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex: 1;
+}
+.migrate-text i {
+  font-size: 1.6rem;
+  color: #e6a800;
+  flex-shrink: 0;
+}
+.migrate-text strong {
+  display: block;
+  font-size: .92rem;
+  color: #5c3d00;
+  margin-bottom: 3px;
+}
+.migrate-text p {
+  font-size: .8rem;
+  color: #8a6500;
+  margin: 0;
+}
+.btn-migrate {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 22px;
+  background: #e6a800;
+  color: #fff;
+  border: none;
+  border-radius: 50px;
+  font-size: .85rem;
+  font-weight: 700;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background .25s ease, transform .25s ease;
+  box-shadow: 0 4px 14px rgba(230,168,0,.35);
+}
+.btn-migrate:hover:not(:disabled) {
+  background: #c78f00;
+  transform: translateY(-2px);
+}
+.btn-migrate:disabled {
+  opacity: .7;
+  cursor: default;
+}
+
+@media (max-width: 600px) {
+  .migrate-banner { flex-direction: column; align-items: flex-start; }
+  .btn-migrate { width: 100%; justify-content: center; }
+}
