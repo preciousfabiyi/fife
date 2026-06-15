@@ -604,7 +604,7 @@ function openCheckoutModal() {
     document.getElementById('coStep1').classList.remove('co-hidden');
   });
 
-  // Step 2 → 3: Place order + notify admin
+  // ── Step 2 → 3: Place order + save to Firestore + notify admin ──
   modal.querySelector('#coPaidBtn').addEventListener('click', () => {
     const name    = document.getElementById('coName').value.trim();
     const phone   = document.getElementById('coPhone').value.trim();
@@ -622,17 +622,32 @@ function openCheckoutModal() {
       `${i.name}${i.qty > 1 ? ` ×${i.qty}` : ''} — ₦${i.price * i.qty}`
     ).join('\n');
 
-    // Save order to localStorage for admin (with proof image)
-    const orders = JSON.parse(localStorage.getItem('fifeOrders') || '[]');
-    orders.unshift({
-      ref: orderRef,
-      name, phone, address, payment,
-      proof: proofBase64,
-      items: cart.map(i => ({ ...i })),
+    // Build order object
+    const orderData = {
+      ref:     orderRef,
+      name,
+      phone,
+      address,
+      payment,
+      proof:   proofBase64,
+      items:   cart.map(i => ({ ...i })),
       total,
-      date: new Date().toLocaleString('en-NG'),
-      status: 'Pending'
-    });
+      date:    new Date().toLocaleString('en-NG'),
+      status:  'Pending'
+    };
+
+    // ── FIX: Save order to Firestore so admin can see it from any device ──
+    if (_db) {
+      _db.collection('orders').add(
+        Object.assign({}, orderData, {
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        })
+      ).catch(function(e) { console.warn('Firestore order save failed:', e); });
+    }
+
+    // Also keep a local copy as fallback
+    const orders = JSON.parse(localStorage.getItem('fifeOrders') || '[]');
+    orders.unshift(orderData);
     localStorage.setItem('fifeOrders', JSON.stringify(orders));
 
     // Send email notification via EmailJS
@@ -719,4 +734,3 @@ revealEls.forEach((el, i) => {
 
 /* ===== INIT ===== */
 loadProducts();
-
