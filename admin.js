@@ -1,10 +1,13 @@
 
-// FIFE BEAUTY HUB - Admin JS (fixed version)
+// FIFE BEAUTY HUB - Admin JS (Cloudinary + Firestore, fully fixed)
 
 var ADMIN_USER = 'Fife';
 var ADMIN_PASS = 'Fife1234';
 
-// Your web app's Firebase configuration
+var CLOUDINARY_CLOUD_NAME    = 'dnaygu9qn';
+var CLOUDINARY_UPLOAD_PRESET = 'Fife_Products';
+var CLOUDINARY_UPLOAD_URL    = 'https://api.cloudinary.com/v1_1/' + CLOUDINARY_CLOUD_NAME + '/image/upload';
+
 const firebaseConfig = {
   apiKey: "AIzaSyAk9_7mqgi22VUznizgg569SNzuoiplfKE",
   authDomain: "fife-beauty-hub-b41de.firebaseapp.com",
@@ -22,11 +25,12 @@ try {
     db = firebase.firestore();
     useFirebase = true;
   }
-} catch(e) { console.warn('Firebase:', e); }
+} catch(e) { console.warn('Firebase init:', e); }
 
-var products = [];
-var pendingDeleteIdx = null;
-var imageBase64 = null;
+var products          = [];
+var pendingDeleteIdx  = null;
+var selectedFile      = null;
+var imagePreviewUrl   = null;
 var activeOrderFilter = 'all';
 
 function g(id) { return document.getElementById(id); }
@@ -39,26 +43,20 @@ function showToast(msg) {
   setTimeout(function() { t.classList.remove('show'); }, 3000);
 }
 
-// ── Everything runs AFTER page is fully loaded ──
+// ── INIT ─────────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', function() {
-
-  // Auto-login if session active
   if (sessionStorage.getItem('fifeAdminLoggedIn') === 'true') {
     showDashboard();
     return;
   }
-
-  // Sign in button
   var loginBtn = g('loginBtn');
   if (loginBtn) loginBtn.addEventListener('click', attemptLogin);
 
-  // Press Enter to login
   var loginPass = g('loginPass');
   if (loginPass) loginPass.addEventListener('keydown', function(e) {
     if (e.key === 'Enter') attemptLogin();
   });
 
-  // Show/hide password
   var togglePass = g('togglePass');
   if (togglePass) togglePass.addEventListener('click', function() {
     var inp = g('loginPass');
@@ -67,38 +65,25 @@ document.addEventListener('DOMContentLoaded', function() {
     var icon = togglePass.querySelector('i');
     if (icon) icon.className = inp.type === 'text' ? 'fa-regular fa-eye-slash' : 'fa-regular fa-eye';
   });
-
 });
 
 function attemptLogin() {
-  var userEl = g('loginUser');
-  var passEl = g('loginPass');
-  var errEl  = g('loginError');
+  var userEl = g('loginUser'), passEl = g('loginPass'), errEl = g('loginError');
   if (!userEl || !passEl) return;
-
-  var user = userEl.value.trim();
-  var pass = passEl.value.trim();
-
-  if (user === ADMIN_USER && pass === ADMIN_PASS) {
+  if (userEl.value.trim() === ADMIN_USER && passEl.value.trim() === ADMIN_PASS) {
     sessionStorage.setItem('fifeAdminLoggedIn', 'true');
     if (errEl) errEl.classList.add('hidden');
     showDashboard();
   } else {
     if (errEl) errEl.classList.remove('hidden');
-    passEl.value = '';
-    passEl.focus();
+    passEl.value = ''; passEl.focus();
   }
 }
 
 function showDashboard() {
-  var loginScreen    = g('loginScreen');
-  var adminDashboard = g('adminDashboard');
-  var adminBottomNav = g('adminBottomNav');
-  if (loginScreen)    loginScreen.classList.add('hidden');
-  if (adminDashboard) adminDashboard.classList.remove('hidden');
-  if (adminBottomNav) adminBottomNav.classList.remove('hidden');
-
-  // Wire up dashboard buttons (only runs once logged in)
+  if (g('loginScreen'))    g('loginScreen').classList.add('hidden');
+  if (g('adminDashboard')) g('adminDashboard').classList.remove('hidden');
+  if (g('adminBottomNav')) g('adminBottomNav').classList.remove('hidden');
   wireDashboard();
   loadProducts();
   updateOrdersBadge();
@@ -106,30 +91,24 @@ function showDashboard() {
 
 function doLogout() {
   sessionStorage.removeItem('fifeAdminLoggedIn');
-  var loginScreen    = g('loginScreen');
-  var adminDashboard = g('adminDashboard');
-  var adminBottomNav = g('adminBottomNav');
-  if (loginScreen)    loginScreen.classList.remove('hidden');
-  if (adminDashboard) adminDashboard.classList.add('hidden');
-  if (adminBottomNav) adminBottomNav.classList.add('hidden');
+  if (g('loginScreen'))    g('loginScreen').classList.remove('hidden');
+  if (g('adminDashboard')) g('adminDashboard').classList.add('hidden');
+  if (g('adminBottomNav')) g('adminBottomNav').classList.add('hidden');
   if (g('loginUser')) g('loginUser').value = '';
   if (g('loginPass')) g('loginPass').value = '';
 }
 
+// ── WIRE DASHBOARD ────────────────────────────────────────────────────────────
 var dashboardWired = false;
 function wireDashboard() {
   if (dashboardWired) return;
   dashboardWired = true;
 
-  // Migrate old localStorage products to Firebase
   checkMigrateBanner();
   if (g('migrateBtn')) g('migrateBtn').addEventListener('click', migrateProducts);
-
-  // Logout
   if (g('logoutBtn'))    g('logoutBtn').addEventListener('click', doLogout);
   if (g('logoutBtnTop')) g('logoutBtnTop').addEventListener('click', doLogout);
 
-  // Tabs — sidebar + bottom nav
   document.querySelectorAll('[data-tab]').forEach(function(link) {
     link.addEventListener('click', function(e) {
       e.preventDefault();
@@ -137,26 +116,14 @@ function wireDashboard() {
     });
   });
 
-  // Delete modal
-  if (g('delCancel')) g('delCancel').addEventListener('click', function() {
-    g('deleteModal').classList.add('hidden');
-    pendingDeleteIdx = null;
-  });
-  if (g('delBackdrop')) g('delBackdrop').addEventListener('click', function() {
-    g('deleteModal').classList.add('hidden');
-    pendingDeleteIdx = null;
-  });
-  if (g('delConfirm')) g('delConfirm').addEventListener('click', confirmDelete);
+  if (g('delCancel'))   g('delCancel').addEventListener('click', function() { g('deleteModal').classList.add('hidden'); pendingDeleteIdx = null; });
+  if (g('delBackdrop')) g('delBackdrop').addEventListener('click', function() { g('deleteModal').classList.add('hidden'); pendingDeleteIdx = null; });
+  if (g('delConfirm'))  g('delConfirm').addEventListener('click', confirmDelete);
 
-  // Image upload zone
   if (g('uploadZone') && g('productImage')) {
     g('uploadZone').addEventListener('click', function() { g('productImage').click(); });
-    g('uploadZone').addEventListener('dragover', function(e) {
-      e.preventDefault(); g('uploadZone').classList.add('drag-over');
-    });
-    g('uploadZone').addEventListener('dragleave', function() {
-      g('uploadZone').classList.remove('drag-over');
-    });
+    g('uploadZone').addEventListener('dragover', function(e) { e.preventDefault(); g('uploadZone').classList.add('drag-over'); });
+    g('uploadZone').addEventListener('dragleave', function() { g('uploadZone').classList.remove('drag-over'); });
     g('uploadZone').addEventListener('drop', function(e) {
       e.preventDefault(); g('uploadZone').classList.remove('drag-over');
       if (e.dataTransfer.files[0]) handleImageFile(e.dataTransfer.files[0]);
@@ -167,26 +134,17 @@ function wireDashboard() {
   }
 
   if (g('removeImg')) g('removeImg').addEventListener('click', function(e) {
-    e.stopPropagation();
-    imageBase64 = null;
-    if (g('productImage')) g('productImage').value = '';
-    if (g('previewImg'))   g('previewImg').src = '';
-    if (g('imagePreview'))     g('imagePreview').classList.add('hidden');
-    if (g('uploadPlaceholder')) g('uploadPlaceholder').classList.remove('hidden');
+    e.stopPropagation(); clearImageSelection();
   });
 
-  // Product form submit
   if (g('productForm')) g('productForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    submitProduct();
+    e.preventDefault(); submitProduct();
   });
 
-  // Search
   if (g('searchProducts')) g('searchProducts').addEventListener('input', function() {
     renderProducts(g('searchProducts').value);
   });
 
-  // Order filter tabs
   document.querySelectorAll('.order-filter-btn').forEach(function(btn) {
     btn.addEventListener('click', function() {
       document.querySelectorAll('.order-filter-btn').forEach(function(b) { b.classList.remove('active'); });
@@ -196,16 +154,11 @@ function wireDashboard() {
     });
   });
 
-  // Proof viewer close
-  if (g('proofBackdrop')) g('proofBackdrop').addEventListener('click', function() {
-    g('proofViewerModal').classList.add('hidden');
-  });
-  if (g('proofClose')) g('proofClose').addEventListener('click', function() {
-    g('proofViewerModal').classList.add('hidden');
-  });
+  if (g('proofBackdrop')) g('proofBackdrop').addEventListener('click', function() { g('proofViewerModal').classList.add('hidden'); });
+  if (g('proofClose'))    g('proofClose').addEventListener('click', function() { g('proofViewerModal').classList.add('hidden'); });
 }
 
-// ── TABS ──
+// ── TABS ──────────────────────────────────────────────────────────────────────
 function switchTab(tab) {
   document.querySelectorAll('[data-tab]').forEach(function(a) {
     a.classList.toggle('active', a.dataset.tab === tab);
@@ -228,20 +181,36 @@ function switchTab(tab) {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-// ── PRODUCTS ──
+// ── LOAD PRODUCTS ─────────────────────────────────────────────────────────────
+// KEY FIX: do NOT use orderBy('createdAt') — old products have no createdAt field
+// and Firestore requires a composite index for orderBy on a field that doesn't
+// exist on all docs, which causes the query to silently return 0 results.
+// We fetch all and sort client-side instead.
 function loadProducts() {
   if (useFirebase && db) {
-    db.collection('products').orderBy('createdAt','desc').get().then(function(snap) {
-      products = snap.docs.map(function(d) { return Object.assign({ id: d.id }, d.data()); });
-      try { localStorage.setItem('fifeProducts', JSON.stringify(products)); } catch(e) {}
-      updateCount(); renderProducts();
-    }).catch(function() {
-      products = JSON.parse(localStorage.getItem('fifeProducts') || '[]');
-      updateCount(); renderProducts();
-    });
+    db.collection('products').get()
+      .then(function(snap) {
+        products = snap.docs.map(function(d) { return Object.assign({ id: d.id }, d.data()); });
+        // Sort newest first client-side (handles missing createdAt gracefully)
+        products.sort(function(a, b) {
+          var ta = a.createdAt && a.createdAt.toMillis ? a.createdAt.toMillis() : 0;
+          var tb = b.createdAt && b.createdAt.toMillis ? b.createdAt.toMillis() : 0;
+          return tb - ta;
+        });
+        try { localStorage.setItem('fifeProducts', JSON.stringify(products)); } catch(e) {}
+        updateCount();
+        renderProducts();
+      })
+      .catch(function(err) {
+        console.warn('Firestore load failed, using localStorage:', err);
+        products = JSON.parse(localStorage.getItem('fifeProducts') || '[]');
+        updateCount();
+        renderProducts();
+      });
   } else {
     products = JSON.parse(localStorage.getItem('fifeProducts') || '[]');
-    updateCount(); renderProducts();
+    updateCount();
+    renderProducts();
   }
 }
 
@@ -257,9 +226,9 @@ function updateCount() {
 }
 
 function renderProducts(filter) {
-  var q = ((filter !== undefined ? filter : (g('searchProducts') ? g('searchProducts').value : ''))||'').toLowerCase();
+  var q = ((filter !== undefined ? filter : (g('searchProducts') ? g('searchProducts').value : '')) || '').toLowerCase();
   var list = q ? products.filter(function(p) {
-    return p.name.toLowerCase().includes(q) || (p.category||'').toLowerCase().includes(q);
+    return p.name.toLowerCase().includes(q) || (p.category || '').toLowerCase().includes(q);
   }) : products;
 
   if (g('manageCount')) g('manageCount').textContent = list.length + ' product' + (list.length !== 1 ? 's' : '');
@@ -284,7 +253,7 @@ function renderProducts(filter) {
         '<p class="price">&#8358;' + Number(p.price).toLocaleString() + '</p>' +
       '</div>' +
       '<div class="admin-product-actions">' +
-        '<button class="btn-delete-product" data-idx="' + idx + '" data-id="' + (p.id||'') + '">' +
+        '<button class="btn-delete-product" data-idx="' + idx + '" data-id="' + (p.id || '') + '">' +
           '<i class="fa-solid fa-trash-can"></i> Delete' +
         '</button>' +
       '</div>' +
@@ -310,112 +279,135 @@ function confirmDelete() {
   var name = product.name;
   var firestoreId = product.id || null;
 
-  // Animate card out
   var card = g('prod-' + pendingDeleteIdx);
   if (card) { card.style.opacity = '0'; card.style.transform = 'scale(0.9)'; card.style.transition = 'all 0.2s'; }
 
-  // Remove from array and save immediately
   products.splice(pendingDeleteIdx, 1);
   saveProductsLocal();
   updateCount();
-
-  // Close modal instantly
   if (g('deleteModal')) g('deleteModal').classList.add('hidden');
   pendingDeleteIdx = null;
-
-  // Re-render after animation
   setTimeout(function() { renderProducts(); showToast('"' + name + '" deleted.'); }, 220);
 
-  // Delete from Firestore in background
   if (useFirebase && db && firestoreId) {
-    db.collection('products').doc(firestoreId).delete().catch(function(e) { console.warn('Firestore delete:', e); });
+    db.collection('products').doc(firestoreId).delete()
+      .catch(function(e) { console.warn('Firestore delete:', e); });
   }
 }
 
-// ── IMAGE UPLOAD & COMPRESS ──
+// ── IMAGE SELECTION ───────────────────────────────────────────────────────────
 function handleImageFile(file) {
   if (!file.type.startsWith('image/')) { showToast('Please select an image file.'); return; }
   if (file.size > 15 * 1024 * 1024)   { showToast('Image must be under 15MB.'); return; }
 
-  if (g('uploadPlaceholder')) {
-    g('uploadPlaceholder').classList.remove('hidden');
-    g('uploadPlaceholder').innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i><p>Compressing…</p>';
-  }
-  if (g('imagePreview')) g('imagePreview').classList.add('hidden');
+  if (imagePreviewUrl) URL.revokeObjectURL(imagePreviewUrl);
+  selectedFile    = file;
+  imagePreviewUrl = URL.createObjectURL(file);
 
-  var reader = new FileReader();
-  reader.onload = function(ev) {
-    var img = new Image();
-    img.onload = function() {
-      var MAX = 800, w = img.width, h = img.height;
-      if (w > h && w > MAX) { h = Math.round(h*MAX/w); w = MAX; }
-      else if (h > MAX)     { w = Math.round(w*MAX/h); h = MAX; }
-      var canvas = document.createElement('canvas');
-      canvas.width = w; canvas.height = h;
-      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-      imageBase64 = canvas.toDataURL('image/jpeg', 0.75);
-      if (g('previewImg')) g('previewImg').src = imageBase64;
-      if (g('uploadPlaceholder')) {
-        g('uploadPlaceholder').classList.add('hidden');
-        g('uploadPlaceholder').innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i><p>Tap or drag to upload image</p><span>PNG, JPG, WEBP — max 15MB</span>';
-      }
-      if (g('imagePreview')) g('imagePreview').classList.remove('hidden');
-      showToast('Image ready ✓');
-    };
-    img.src = ev.target.result;
-  };
-  reader.readAsDataURL(file);
+  if (g('previewImg'))        g('previewImg').src = imagePreviewUrl;
+  if (g('uploadPlaceholder')) g('uploadPlaceholder').classList.add('hidden');
+  if (g('imagePreview'))      g('imagePreview').classList.remove('hidden');
+  showToast('Image selected ✓');
 }
 
-// ── ADD PRODUCT ──
+function clearImageSelection() {
+  selectedFile = null;
+  if (imagePreviewUrl) { URL.revokeObjectURL(imagePreviewUrl); imagePreviewUrl = null; }
+  if (g('productImage'))      g('productImage').value = '';
+  if (g('previewImg'))        g('previewImg').src = '';
+  if (g('imagePreview'))      g('imagePreview').classList.add('hidden');
+  if (g('uploadPlaceholder')) g('uploadPlaceholder').classList.remove('hidden');
+}
+
+// ── CLOUDINARY UPLOAD ─────────────────────────────────────────────────────────
+function uploadToCloudinary(file) {
+  return new Promise(function(resolve, reject) {
+    var formData = new FormData();
+    formData.append('file', file);
+    formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+    formData.append('folder', 'fife_products');
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', CLOUDINARY_UPLOAD_URL);
+    xhr.onload = function() {
+      if (xhr.status === 200) {
+        resolve(JSON.parse(xhr.responseText).secure_url);
+      } else {
+        reject(new Error('Cloudinary error: ' + xhr.responseText));
+      }
+    };
+    xhr.onerror = function() { reject(new Error('Network error')); };
+    xhr.send(formData);
+  });
+}
+
+function uploadBase64ToCloudinary(base64) {
+  return new Promise(function(resolve, reject) {
+    var formData = new FormData();
+    formData.append('file', base64);
+    formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+    formData.append('folder', 'fife_products');
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', CLOUDINARY_UPLOAD_URL);
+    xhr.onload = function() {
+      if (xhr.status === 200) {
+        resolve(JSON.parse(xhr.responseText).secure_url);
+      } else {
+        reject(new Error('Cloudinary error: ' + xhr.responseText));
+      }
+    };
+    xhr.onerror = function() { reject(new Error('Network error')); };
+    xhr.send(formData);
+  });
+}
+
+// ── ADD PRODUCT ───────────────────────────────────────────────────────────────
 function submitProduct() {
-  var name     = (g('productName') ? g('productName').value : '').trim();
-  var price    = (g('productPrice') ? g('productPrice').value : '').trim();
-  var category = g('productCategory') ? (g('productCategory').value || 'General') : 'General';
-  var desc     = g('productDesc') ? (g('productDesc').value || '').trim() : '';
+  var name     = (g('productName')     ? g('productName').value     : '').trim();
+  var price    = (g('productPrice')    ? g('productPrice').value    : '').trim();
+  var category = (g('productCategory') ? g('productCategory').value : 'General') || 'General';
+  var desc     = (g('productDesc')     ? g('productDesc').value     : '').trim();
 
   if (!name || !price) { showToast('Please enter name and price.'); return; }
-  if (!imageBase64)    { showToast('Please upload a product image.'); return; }
+  if (!selectedFile)   { showToast('Please select a product image.'); return; }
 
   var btn = g('uploadBtn');
-  if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving…'; }
+  if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Uploading image…'; }
 
-  var product = { name: name, price: Number(price), image: imageBase64, category: category, desc: desc };
-
-  function onSaved() {
-    if (g('productForm')) g('productForm').reset();
-    imageBase64 = null;
-    if (g('previewImg')) g('previewImg').src = '';
-    if (g('imagePreview')) g('imagePreview').classList.add('hidden');
-    if (g('uploadPlaceholder')) g('uploadPlaceholder').classList.remove('hidden');
-    if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-upload"></i> Upload Product'; }
-    showToast('"' + name + '" added!');
-  }
-
-  if (useFirebase && db) {
-    var toSave = Object.assign({}, product, { createdAt: firebase.firestore.FieldValue.serverTimestamp() });
-    db.collection('products').add(toSave).then(function(ref) {
-      product.id = ref.id;
-      products.unshift(product);
+  uploadToCloudinary(selectedFile)
+    .then(function(imageUrl) {
+      if (btn) btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving product…';
+      var product = {
+        name:      name,
+        price:     Number(price),
+        image:     imageUrl,
+        category:  category,
+        desc:      desc,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      };
+      if (useFirebase && db) {
+        return db.collection('products').add(product).then(function(ref) {
+          return Object.assign({ id: ref.id }, product);
+        });
+      }
+      return Promise.resolve(product);
+    })
+    .then(function(saved) {
+      products.unshift(saved);
       saveProductsLocal();
       updateCount();
-      onSaved();
-    }).catch(function(e) {
-      console.warn('Firestore save error:', e);
-      products.unshift(product);
-      saveProductsLocal();
-      updateCount();
-      onSaved();
+      if (g('productForm')) g('productForm').reset();
+      clearImageSelection();
+      if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-upload"></i> Upload Product'; }
+      showToast('"' + name + '" added!');
+    })
+    .catch(function(e) {
+      console.error('Upload error:', e);
+      showToast('Upload failed — check internet and try again.');
+      if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-upload"></i> Upload Product'; }
     });
-  } else {
-    products.unshift(product);
-    saveProductsLocal();
-    updateCount();
-    onSaved();
-  }
 }
 
-// ── ORDERS — FIX: load from Firestore so all customer orders are visible ──
+// ── ORDERS ────────────────────────────────────────────────────────────────────
 function renderOrders() {
   var ol = g('ordersList');
   if (!ol) return;
@@ -440,7 +432,7 @@ function renderOrders() {
             '<span class="order-ref">' + o.ref + '</span>' +
             '<span class="order-status status-' + st.toLowerCase() + '">' + st + '</span>' +
           '</div>' +
-          '<span class="order-date">' + (o.date||'') + '</span>' +
+          '<span class="order-date">' + (o.date || '') + '</span>' +
         '</div>' +
         '<div class="order-body">' +
           '<div class="order-details">' +
@@ -449,43 +441,38 @@ function renderOrders() {
             '<div class="order-info-row"><i class="fa-solid fa-location-dot"></i><span>' + o.address + '</span></div>' +
             '<div class="order-info-row"><i class="fa-solid fa-credit-card"></i><span>' + o.payment + '</span></div>' +
             '<div class="order-items">' +
-              (o.items||[]).map(function(i){ return '<div class="order-item-row"><span>' + i.name + (i.qty>1?' x'+i.qty:'') + '</span><span>&#8358;' + (i.price*i.qty).toLocaleString() + '</span></div>'; }).join('') +
+              (o.items || []).map(function(i) {
+                return '<div class="order-item-row"><span>' + i.name + (i.qty > 1 ? ' x' + i.qty : '') + '</span><span>&#8358;' + (i.price * i.qty).toLocaleString() + '</span></div>';
+              }).join('') +
               '<div class="order-item-row total-row"><span>Total</span><strong>&#8358;' + Number(o.total).toLocaleString() + '</strong></div>' +
             '</div>' +
           '</div>' +
           (o.proof && o.proof.startsWith('data:image') ?
-            '<div class="order-proof-wrap"><p class="order-proof-label">Payment Screenshot</p><img src="' + o.proof + '" class="order-proof-img" data-idx="' + ri + '" data-id="' + (o.id||'') + '"></div>' : '') +
+            '<div class="order-proof-wrap"><p class="order-proof-label">Payment Screenshot</p><img src="' + o.proof + '" class="order-proof-img" data-idx="' + ri + '"></div>' : '') +
         '</div>' +
         '<div class="order-actions">' +
-          '<button class="order-btn btn-confirm' + (st==='Confirmed'?' is-done':'') + '" data-idx="' + ri + '" data-id="' + (o.id||'') + '" data-status="Confirmed"' + (st==='Confirmed'?' disabled':'') + '><i class="fa-solid fa-check"></i> ' + (st==='Confirmed'?'Confirmed':'Confirm') + '</button>' +
-          '<button class="order-btn btn-reject' + (st==='Rejected'?' is-done':'') + '" data-idx="' + ri + '" data-id="' + (o.id||'') + '" data-status="Rejected"' + (st==='Rejected'?' disabled':'') + '><i class="fa-solid fa-xmark"></i> ' + (st==='Rejected'?'Rejected':'Reject') + '</button>' +
+          '<button class="order-btn btn-confirm' + (st === 'Confirmed' ? ' is-done' : '') + '" data-idx="' + ri + '" data-id="' + (o.id || '') + '" data-status="Confirmed"' + (st === 'Confirmed' ? ' disabled' : '') + '><i class="fa-solid fa-check"></i> ' + (st === 'Confirmed' ? 'Confirmed' : 'Confirm') + '</button>' +
+          '<button class="order-btn btn-reject'  + (st === 'Rejected'  ? ' is-done' : '') + '" data-idx="' + ri + '" data-id="' + (o.id || '') + '" data-status="Rejected"'  + (st === 'Rejected'  ? ' disabled' : '') + '><i class="fa-solid fa-xmark"></i> '  + (st === 'Rejected'  ? 'Rejected'  : 'Reject')  + '</button>' +
         '</div>' +
       '</div>';
     }).join('');
 
-    // ── Order status buttons: update Firestore + localStorage ──
     ol.querySelectorAll('.order-btn').forEach(function(btn) {
       btn.addEventListener('click', function() {
         if (btn.disabled) return;
-        var idx        = parseInt(btn.dataset.idx);
+        var idx         = parseInt(btn.dataset.idx);
         var firestoreId = btn.dataset.id;
-        var status     = btn.dataset.status;
+        var status      = btn.dataset.status;
 
-        // Update localStorage
         var localOrders = JSON.parse(localStorage.getItem('fifeOrders') || '[]');
-        if (localOrders[idx]) {
-          localOrders[idx].status = status;
-          localStorage.setItem('fifeOrders', JSON.stringify(localOrders));
-        }
+        if (localOrders[idx]) { localOrders[idx].status = status; localStorage.setItem('fifeOrders', JSON.stringify(localOrders)); }
 
-        // ── FIX: also update status in Firestore ──
         if (useFirebase && db && firestoreId) {
           db.collection('orders').doc(firestoreId).update({ status: status })
-            .catch(function(e) { console.warn('Firestore status update failed:', e); });
+            .catch(function(e) { console.warn('Status update:', e); });
         }
 
-        // Update UI immediately without re-fetching
-        var card  = btn.closest('.order-card');
+        var card = btn.closest('.order-card');
         var badge = card.querySelector('.order-status');
         if (badge) { badge.textContent = status; badge.className = 'order-status status-' + status.toLowerCase(); }
         card.querySelectorAll('.order-btn').forEach(function(b) { b.disabled = true; b.classList.add('is-done'); });
@@ -497,127 +484,129 @@ function renderOrders() {
     ol.querySelectorAll('.order-proof-img').forEach(function(img) {
       img.addEventListener('click', function() {
         if (g('proofViewerImg')) g('proofViewerImg').src = img.src;
-        if (g('proofViewerLabel')) g('proofViewerLabel').textContent = orders[parseInt(img.dataset.idx)]
-          ? orders[parseInt(img.dataset.idx)].name + ' · ' + orders[parseInt(img.dataset.idx)].ref
-          : '';
+        var o = orders[parseInt(img.dataset.idx)];
+        if (g('proofViewerLabel') && o) g('proofViewerLabel').textContent = o.name + ' · ' + o.ref;
         if (g('proofViewerModal')) g('proofViewerModal').classList.remove('hidden');
       });
     });
   }
 
-  // ── FIX: load orders from Firestore first; fall back to localStorage ──
+  // Same fix as products — no orderBy to avoid index issues
   if (useFirebase && db) {
-    db.collection('orders').orderBy('createdAt', 'desc').get()
+    db.collection('orders').get()
       .then(function(snap) {
         var orders = snap.docs.map(function(d) { return Object.assign({ id: d.id }, d.data()); });
-        // Sync to localStorage as fallback cache
+        // Sort newest first client-side
+        orders.sort(function(a, b) {
+          var ta = a.createdAt && a.createdAt.toMillis ? a.createdAt.toMillis() : 0;
+          var tb = b.createdAt && b.createdAt.toMillis ? b.createdAt.toMillis() : 0;
+          return tb - ta;
+        });
         try { localStorage.setItem('fifeOrders', JSON.stringify(orders)); } catch(e) {}
         displayOrders(orders);
       })
       .catch(function(e) {
-        console.warn('Firestore orders read failed, using localStorage:', e);
-        var orders = JSON.parse(localStorage.getItem('fifeOrders') || '[]');
-        displayOrders(orders);
+        console.warn('Firestore orders failed:', e);
+        displayOrders(JSON.parse(localStorage.getItem('fifeOrders') || '[]'));
       });
   } else {
-    var orders = JSON.parse(localStorage.getItem('fifeOrders') || '[]');
-    displayOrders(orders);
+    displayOrders(JSON.parse(localStorage.getItem('fifeOrders') || '[]'));
   }
 }
 
 function updateOrdersBadge(count) {
-  // If count not passed, try Firestore then fall back to localStorage
   if (count !== undefined) {
-    ['ordersBadge','navOrdersBadge'].forEach(function(id) {
+    ['ordersBadge', 'navOrdersBadge'].forEach(function(id) {
       var el = g(id); if (el) el.textContent = count > 0 ? count : '';
     });
     return;
   }
-
   if (useFirebase && db) {
-    db.collection('orders').get().then(function(snap) {
-      var n = snap.size;
-      ['ordersBadge','navOrdersBadge'].forEach(function(id) {
-        var el = g(id); if (el) el.textContent = n > 0 ? n : '';
+    db.collection('orders').get()
+      .then(function(snap) {
+        var n = snap.size;
+        ['ordersBadge', 'navOrdersBadge'].forEach(function(id) { var el = g(id); if (el) el.textContent = n > 0 ? n : ''; });
+      })
+      .catch(function() {
+        var n = JSON.parse(localStorage.getItem('fifeOrders') || '[]').length;
+        ['ordersBadge', 'navOrdersBadge'].forEach(function(id) { var el = g(id); if (el) el.textContent = n > 0 ? n : ''; });
       });
-    }).catch(function() {
-      var n = JSON.parse(localStorage.getItem('fifeOrders')||'[]').length;
-      ['ordersBadge','navOrdersBadge'].forEach(function(id) {
-        var el = g(id); if (el) el.textContent = n > 0 ? n : '';
-      });
-    });
   } else {
-    var n = JSON.parse(localStorage.getItem('fifeOrders')||'[]').length;
-    ['ordersBadge','navOrdersBadge'].forEach(function(id) {
-      var el = g(id); if (el) el.textContent = n > 0 ? n : '';
-    });
+    var n = JSON.parse(localStorage.getItem('fifeOrders') || '[]').length;
+    ['ordersBadge', 'navOrdersBadge'].forEach(function(id) { var el = g(id); if (el) el.textContent = n > 0 ? n : ''; });
   }
 }
 
-// ── MIGRATE OLD PRODUCTS ──
+// ── MIGRATE: old base64 images → Cloudinary, update Firestore ─────────────────
 function checkMigrateBanner() {
   var banner = g('migrateBanner');
   if (!banner) return;
-
-  // Only show if: Firebase is on AND there are localStorage products
-  var local = JSON.parse(localStorage.getItem('fifeProducts') || '[]');
-  if (useFirebase && db && local.length > 0) {
-    banner.style.display = 'flex';
-  } else {
-    banner.style.display = 'none';
-  }
+  // Show banner if any Firestore product still has a base64 image
+  if (!useFirebase || !db) { banner.style.display = 'none'; return; }
+  db.collection('products').get().then(function(snap) {
+    var hasBase64 = snap.docs.some(function(d) {
+      var img = d.data().image || '';
+      return img.startsWith('data:image');
+    });
+    banner.style.display = hasBase64 ? 'flex' : 'none';
+  }).catch(function() { banner.style.display = 'none'; });
 }
 
 function migrateProducts() {
   var btn = g('migrateBtn');
-  var local = JSON.parse(localStorage.getItem('fifeProducts') || '[]');
-
-  if (!local.length) { showToast('No local products to migrate.'); return; }
   if (!useFirebase || !db) { showToast('Firebase not connected.'); return; }
+  if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Loading products…'; }
 
-  if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Migrating…'; }
+  db.collection('products').get()
+    .then(function(snap) {
+      var toMigrate = snap.docs.filter(function(d) {
+        var img = d.data().image || '';
+        return img.startsWith('data:image');
+      });
 
-  var total = local.length;
-  var done  = 0;
-  var failed = 0;
+      if (toMigrate.length === 0) {
+        showToast('All products already have fast images ✓');
+        if (g('migrateBanner')) g('migrateBanner').style.display = 'none';
+        if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> Migrate Now'; }
+        return;
+      }
 
-  local.forEach(function(p) {
-    // Don't re-upload if already has a Firestore ID
-    if (p.id) { done++; checkDone(); return; }
+      var total = toMigrate.length, done = 0, failed = 0;
+      showToast('Migrating ' + total + ' image' + (total > 1 ? 's' : '') + ' to Cloudinary…');
 
-    var toSave = Object.assign({}, p, {
-      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      toMigrate.forEach(function(doc) {
+        var data = doc.data();
+        uploadBase64ToCloudinary(data.image)
+          .then(function(newUrl) {
+            return db.collection('products').doc(doc.id).update({ image: newUrl });
+          })
+          .then(function() {
+            done++;
+            if (btn) btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> ' + done + '/' + total + ' done…';
+            checkDone();
+          })
+          .catch(function(e) {
+            console.warn('Migration failed for:', data.name, e);
+            failed++; done++;
+            checkDone();
+          });
+      });
+
+      function checkDone() {
+        if (done < total) return;
+        if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> Migrate Now'; }
+        if (failed === 0) {
+          showToast('✓ All ' + total + ' images migrated to Cloudinary!');
+          if (g('migrateBanner')) g('migrateBanner').style.display = 'none';
+          loadProducts();
+        } else {
+          showToast((total - failed) + ' migrated, ' + failed + ' failed — try again.');
+        }
+      }
+    })
+    .catch(function(e) {
+      console.error('Migration load error:', e);
+      showToast('Could not load products — check connection.');
+      if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> Migrate Now'; }
     });
-    delete toSave.id;
-
-    db.collection('products').add(toSave).then(function(ref) {
-      p.id = ref.id;
-      done++;
-      checkDone();
-    }).catch(function(e) {
-      console.warn('Migration failed for:', p.name, e);
-      failed++;
-      done++;
-      checkDone();
-    });
-  });
-
-  function checkDone() {
-    if (done < total) return;
-
-    // Update localStorage with Firestore IDs
-    try { localStorage.setItem('fifeProducts', JSON.stringify(local)); } catch(e) {}
-
-    if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> Migrate Now'; }
-
-    if (failed === 0) {
-      showToast('✓ All ' + total + ' products migrated to Firebase!');
-      // Hide banner — migration complete
-      if (g('migrateBanner')) g('migrateBanner').style.display = 'none';
-      // Reload from Firebase so grid is fresh
-      loadProducts();
-    } else {
-      showToast((total - failed) + ' migrated, ' + failed + ' failed. Try again.');
-    }
-  }
 }
