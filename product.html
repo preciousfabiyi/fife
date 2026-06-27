@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Shop All Products — Fife Beauty Hub & Spa</title>
+  <meta name="description" content="Browse the full Fife Beauty Hub & Spa catalog — skincare, body care, nail care, and facial care products.">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles/styles.css"/>
+  <link rel="stylesheet" href="styles/large.css"/>
+  <!-- EmailJS SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+</head>
+<body>
+
+<!-- ================= CART SIDEBAR ================= -->
+<div class="cart-sidebar" id="cartSidebar">
+  <div class="cart-header">
+    <h2>Your Cart</h2>
+    <span id="closeCart"><i class="fa-solid fa-xmark"></i></span>
+  </div>
+  <div id="cartItems">
+    <p class="cart-empty">Your cart is empty</p>
+  </div>
+  <div class="cart-footer">
+    <div class="cart-total-row">
+      <span>Total</span>
+      <span>₦<span id="cartTotal">0</span></span>
+    </div>
+    <button class="checkout-btn">Proceed to Checkout</button>
+  </div>
+</div>
+<div class="cart-overlay" id="cartOverlay"></div>
+
+<!-- ================= HEADER ================= -->
+<header class="header" id="header">
+  <a href="index.html" class="logo">
+    <img src="images/fife-logo.jpg" alt="Fife Beauty Hub & Spa Logo" class="logo-img">
+  </a>
+
+  <nav class="navbar">
+    <a href="index.html">Home</a>
+    <a href="index.html#services">Services</a>
+    <a href="product.html" aria-current="page">Products</a>
+    <a href="index.html#reviews">Reviews</a>
+    <a href="index.html#appointment">Appointment</a>
+    <a href="index.html#contact">Contact</a>
+  </nav>
+
+  <div class="header-icons">
+    <button class="icon-btn cart-trigger" aria-label="Open cart">
+      <i class="fa-solid fa-cart-shopping"></i>
+      <span class="cart-badge" id="cartBadge">0</span>
+    </button>
+    <a href="admin.html" class="icon-btn" aria-label="Admin">
+      <i class="fa-solid fa-user-shield"></i>
+    </a>
+    <button class="menu-toggle" id="menuToggle" aria-label="Toggle menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</header>
+
+<!-- Mobile Menu -->
+<div class="mobile-menu" id="mobileMenu">
+  <a href="index.html">Home</a>
+  <a href="index.html#services">Services</a>
+  <a href="product.html">Products</a>
+  <a href="index.html#reviews">Reviews</a>
+  <a href="index.html#appointment">Appointment</a>
+  <a href="index.html#contact">Contact</a>
+</div>
+
+<!-- ================= PAGE BANNER ================= -->
+<section class="page-banner">
+  <div class="page-banner-overlay"></div>
+  <div class="page-banner-content">
+    <span class="hero-tag">Full Catalog</span>
+    <h1>Shop All <em>Products</em></h1>
+    <p>Browse every item in our collection — skincare, body care, nail care, and facial care, all in one place.</p>
+  </div>
+</section>
+
+<!-- ================= PRODUCTS (FULL CATALOG) ================= -->
+<section class="products" id="products">
+  <div class="section-label">Shop</div>
+  <h2 class="section-title">Our Full Range</h2>
+  <p class="section-subtitle">Every product is loaded fresh from our catalog — search, filter, and sort to find exactly what you need.</p>
+
+  <!-- Toolbar -->
+  <div class="product-toolbar">
+    <div class="product-search-wrap">
+      <i class="fa-solid fa-magnifying-glass"></i>
+      <input type="text" class="product-search" id="productSearch" placeholder="Search products…">
+    </div>
+    <div class="product-filter-btns" id="filterBtns">
+      <button class="filter-btn active" data-cat="All">All</button>
+      <button class="filter-btn" data-cat="Skincare">Skincare</button>
+      <button class="filter-btn" data-cat="Body Care">Body Care</button>
+      <button class="filter-btn" data-cat="Nail Care">Nail Care</button>
+      <button class="filter-btn" data-cat="Facial Care">Facial Care</button>
+    </div>
+    <select class="product-sort" id="productSort">
+      <option value="newest">Newest First</option>
+      <option value="price-asc">Price: Low to High</option>
+      <option value="price-desc">Price: High to Low</option>
+      <option value="name-asc">Name: A–Z</option>
+    </select>
+  </div>
+
+  <p class="product-result-count" id="productResultCount"></p>
+  <div class="product-grid" id="productGrid"></div>
+  <div class="product-pagination" id="productPagination"></div>
+</section>
+
+<!-- ================= FOOTER ================= -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <img src="images/fife-logo.jpg" alt="Fife Beauty Hub & Spa" class="footer-logo-img">
+    </div>
+    <p>© 2026 Fife Beauty Hub &amp; Spa · All Rights Reserved</p>
+    <a href="admin.html" class="footer-admin">Admin Portal</a>
+  </div>
+</footer>
+
+<!-- Toast notification -->
+<div class="toast" id="toast"></div>
+
+<script src="scripts/main.js"></script>
+</body>
+</html>
