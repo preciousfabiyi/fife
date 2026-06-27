@@ -8,13 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles/styles.css"/>
-  <link rel="stylesheet" href="styles/large.css"/>
-  <!-- Firebase SDK -->
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
-  <!-- EmailJS SDK -->
-  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+  <link rel="stylesheet" href="styles.css"/>
 </head>
 <body>
 
@@ -39,9 +33,13 @@
 
 <!-- ================= HEADER ================= -->
 <header class="header" id="header">
-  <a href="#home" class="logo">
-    <img src="fife-logo.jpg" alt="Fife Beauty Hub & Spa Logo" class="logo-img">
-  </a>
+  <div class="logo">
+    <div class="logo-icon"><i class="fa-solid fa-spa"></i></div>
+    <div class="logo-text">
+      <span class="logo-main">Fife Beauty</span>
+      <span class="logo-sub">Hub &amp; Spa</span>
+    </div>
+  </div>
 
   <nav class="navbar">
     <a href="#home">Home</a>
@@ -128,30 +126,52 @@
   <h2 class="section-title">Featured Products</h2>
   <p class="section-subtitle">Curated beauty essentials to extend your spa experience at home.</p>
 
-  <!-- Toolbar -->
-  <div class="product-toolbar">
-    <div class="product-search-wrap">
-      <i class="fa-solid fa-magnifying-glass"></i>
-      <input type="text" class="product-search" id="productSearch" placeholder="Search products…">
+  <div class="product-grid" id="productGrid">
+    <!-- PRODUCT 1 -->
+    <div class="product-card">
+      <div class="product-image">
+        <img src="https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?q=80&w=800&auto=format&fit=crop" alt="Skin Glow Cream">
+        <div class="product-overlay">
+          <button class="btn-quick-add add-cart" data-name="Skin Glow Cream" data-price="25">Quick Add</button>
+        </div>
+      </div>
+      <div class="product-info">
+        <h3>Skin Glow Cream</h3>
+        <p class="product-price">₦25</p>
+        <button class="btn btn-primary add-cart" data-name="Skin Glow Cream" data-price="25">Add To Cart</button>
+      </div>
     </div>
-    <div class="product-filter-btns" id="filterBtns">
-      <button class="filter-btn active" data-cat="All">All</button>
-      <button class="filter-btn" data-cat="Skincare">Skincare</button>
-      <button class="filter-btn" data-cat="Body Care">Body Care</button>
-      <button class="filter-btn" data-cat="Nail Care">Nail Care</button>
-      <button class="filter-btn" data-cat="Facial Care">Facial Care</button>
-    </div>
-    <select class="product-sort" id="productSort">
-      <option value="newest">Newest First</option>
-      <option value="price-asc">Price: Low to High</option>
-      <option value="price-desc">Price: High to Low</option>
-      <option value="name-asc">Name: A–Z</option>
-    </select>
-  </div>
 
-  <p class="product-result-count" id="productResultCount"></p>
-  <div class="product-grid" id="productGrid"></div>
-  <div class="product-pagination" id="productPagination"></div>
+    <!-- PRODUCT 2 -->
+    <div class="product-card">
+      <div class="product-image">
+        <img src="https://images.unsplash.com/photo-1515377905703-c4788e51af15?q=80&w=800&auto=format&fit=crop" alt="Facial Care Kit">
+        <div class="product-overlay">
+          <button class="btn-quick-add add-cart" data-name="Facial Care Kit" data-price="40">Quick Add</button>
+        </div>
+      </div>
+      <div class="product-info">
+        <h3>Facial Care Kit</h3>
+        <p class="product-price">₦40</p>
+        <button class="btn btn-primary add-cart" data-name="Facial Care Kit" data-price="40">Add To Cart</button>
+      </div>
+    </div>
+
+    <!-- PRODUCT 3 -->
+    <div class="product-card">
+      <div class="product-image">
+        <img src="https://images.unsplash.com/photo-1556228578-8c89e6adf883?q=80&w=800&auto=format&fit=crop" alt="Body Lotion">
+        <div class="product-overlay">
+          <button class="btn-quick-add add-cart" data-name="Body Lotion" data-price="18">Quick Add</button>
+        </div>
+      </div>
+      <div class="product-info">
+        <h3>Body Lotion</h3>
+        <p class="product-price">₦18</p>
+        <button class="btn btn-primary add-cart" data-name="Body Lotion" data-price="18">Add To Cart</button>
+      </div>
+    </div>
+  </div>
 </section>
 
 <!-- ================= REVIEWS ================= -->
@@ -298,7 +318,8 @@
 <footer>
   <div class="footer-inner">
     <div class="footer-brand">
-      <img src="images/fife-logo.jpg" alt="Fife Beauty Hub & Spa" class="footer-logo-img">
+      <i class="fa-solid fa-spa"></i>
+      <span>Fife Beauty Hub &amp; Spa</span>
     </div>
     <p>© 2026 Fife Beauty Hub &amp; Spa · All Rights Reserved</p>
     <a href="admin.html" class="footer-admin">Admin Portal</a>
@@ -308,16 +329,6 @@
 <!-- Toast notification -->
 <div class="toast" id="toast"></div>
 
-<script src="scripts/main.js"></script>
-
-<nav class="mobile-bottom-nav">
-  <a class="mobile-nav-item active" href="#dashboard"><i class="fa fa-chart-line"></i>Dashboard</a>
-  <a class="mobile-nav-item" href="#add"><i class="fa fa-plus-circle"></i>Add</a>
-  <a class="mobile-nav-item" href="#manage"><i class="fa fa-box-open"></i>Products</a>
-  <a class="mobile-nav-item" href="#orders">
-    <i class="fa fa-inbox"></i>Orders
-    <span class="mobile-nav-badge" id="mobileOrderBadge">3</span>
-  </a>
-</nav>
+<script src="main.js"></script>
 </body>
 </html>

@@ -1,0 +1,12 @@
+{
+  "products": [
+    {
+      "id": "starter_1",
+      "name": "Sample Product — Replace Me",
+      "price": 2500,
+      "image": "https://placehold.co/400x300?text=Add+Your+Product",
+      "category": "General",
+      "description": "This is placeholder data. Go to your Admin panel, click 'Import My Real Products from Firebase' (one time), then 'Export products.json' to replace this file with your real catalog."
+    }
+  ]
+}
