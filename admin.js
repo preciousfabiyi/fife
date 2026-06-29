@@ -1,8 +1,3 @@
-// FIFE BEAUTY HUB - Admin JS (clean version)
-
-var ADMIN_USER = 'Fife';
-var ADMIN_PASS = 'Fife1234';
-
 /* ============================================
    FIFE BEAUTY HUB — Admin JS
 ============================================ */
