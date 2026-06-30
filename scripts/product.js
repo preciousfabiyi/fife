@@ -18,12 +18,12 @@ import {
 // ── Firebase Config ──────────────────────────────────────────
 // Replace these values with your actual Firebase project config
 const firebaseConfig = {
-  apiKey:            "YOUR_API_KEY",
-  authDomain:        "YOUR_PROJECT.firebaseapp.com",
-  projectId:         "YOUR_PROJECT_ID",
-  storageBucket:     "YOUR_PROJECT.appspot.com",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId:             "YOUR_APP_ID"
+ apiKey: "AIzaSyAk9_7mqgi22VUznizgg569SNzuoiplfKE",
+  authDomain: "fife-beauty-hub-b41de.firebaseapp.com",
+  projectId: "fife-beauty-hub-b41de",
+  storageBucket: "fife-beauty-hub-b41de.firebasestorage.app",
+  messagingSenderId: "688954759472",
+  appId: "1:688954759472:web:02d0c84dbab6b4a4f810f5"
 };
 
 const app = initializeApp(firebaseConfig);
