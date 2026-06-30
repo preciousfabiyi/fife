@@ -139,8 +139,17 @@ async function loadProducts() {
   }
 
   try {
-    const snap = await _ordersDb.collection('products').orderBy('createdAt', 'desc').get();
+    const snap = await _ordersDb.collection('products').get();
     const allProducts = snap.docs.map(doc => Object.assign({ id: doc.id }, doc.data()));
+
+    // Sort client-side so products missing a createdAt field (older/imported items)
+    // still show up instead of being silently excluded by Firestore's orderBy.
+    allProducts.sort((a, b) => {
+      const aTime = a.createdAt?.toMillis ? a.createdAt.toMillis() : 0;
+      const bTime = b.createdAt?.toMillis ? b.createdAt.toMillis() : 0;
+      return bTime - aTime;
+    });
+
     cachedProducts = allProducts; // cache so filters/search/sort don't re-hit Firestore
 
     if (allProducts.length === 0) {
