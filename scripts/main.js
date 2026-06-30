@@ -117,11 +117,10 @@ function addToCart(name, price) {
 }
 
 /* ===== LOAD PRODUCTS FROM ADMIN ===== */
-const PRODUCTS_PER_PAGE = 8;
-let currentPage      = 1;
 let activeFilter     = 'All';
 let activeSearch     = '';
 let activeSort       = 'newest';
+let cachedProducts   = []; // avoid re-fetching Firestore on every search/filter/sort
 
 async function loadProducts() {
   var grid = document.getElementById('productGrid');
@@ -142,6 +141,7 @@ async function loadProducts() {
   try {
     const snap = await _ordersDb.collection('products').orderBy('createdAt', 'desc').get();
     const allProducts = snap.docs.map(doc => Object.assign({ id: doc.id }, doc.data()));
+    cachedProducts = allProducts; // cache so filters/search/sort don't re-hit Firestore
 
     if (allProducts.length === 0) {
       grid.innerHTML = '<div class="no-products-msg">' +
@@ -199,13 +199,7 @@ function renderProductGrid(allProducts) {
       : `Showing ${filtered.length} product${filtered.length !== 1 ? 's' : ''}`;
   }
 
-  // 5. Paginate
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PRODUCTS_PER_PAGE));
-  if (currentPage > totalPages) currentPage = 1;
-  const start = (currentPage - 1) * PRODUCTS_PER_PAGE;
-  const paged = filtered.slice(start, start + PRODUCTS_PER_PAGE);
-
-  // 6. Render cards
+  // Render all matching products — no pagination, images lazy-load as you scroll
   const grid = document.getElementById('productGrid');
   if (!grid) return;
 
@@ -216,7 +210,7 @@ function renderProductGrid(allProducts) {
         <p>${activeSearch || activeFilter !== 'All' ? 'No products match your search.' : 'No products yet. Check back soon!'}</p>
       </div>`;
   } else {
-    grid.innerHTML = paged.map(p => `
+    grid.innerHTML = filtered.map(p => `
       <div class="product-card">
         <div class="product-image">
           <img src="${cloudinaryThumb(p.image, 400)}" alt="${p.name}" loading="lazy"
@@ -241,64 +235,18 @@ function renderProductGrid(allProducts) {
     grid.querySelectorAll('.product-card').forEach((el, i) => {
       el.style.opacity = '0';
       el.style.transform = 'translateY(28px)';
-      el.style.transition = `opacity .45s ease ${i * 0.06}s, transform .45s ease ${i * 0.06}s, box-shadow .35s ease`;
+      el.style.transition = `opacity .45s ease ${Math.min(i, 20) * 0.04}s, transform .45s ease ${Math.min(i, 20) * 0.04}s, box-shadow .35s ease`;
       revealObserver.observe(el);
     });
   }
-
-  // 7. Render pagination
-  renderPagination(totalPages);
 }
 
 
-function renderPagination(totalPages) {
-  const container = document.getElementById('productPagination');
-  if (!container) return;
-  if (totalPages <= 1) { container.innerHTML = ''; return; }
-
-  let html = `
-    <button class="page-btn page-arrow" id="pagePrev" ${currentPage === 1 ? 'disabled' : ''}>
-      <i class="fa-solid fa-chevron-left"></i>
-    </button>`;
-
-  for (let i = 1; i <= totalPages; i++) {
-    if (
-      i === 1 || i === totalPages ||
-      (i >= currentPage - 1 && i <= currentPage + 1)
-    ) {
-      html += `<button class="page-btn ${i === currentPage ? 'active' : ''}" data-page="${i}">${i}</button>`;
-    } else if (i === currentPage - 2 || i === currentPage + 2) {
-      html += `<span style="color:var(--text-muted);align-self:center">…</span>`;
-    }
-  }
-
-  html += `
-    <button class="page-btn page-arrow" id="pageNext" ${currentPage === totalPages ? 'disabled' : ''}>
-      <i class="fa-solid fa-chevron-right"></i>
-    </button>`;
-
-  container.innerHTML = html;
-
-  container.querySelectorAll('.page-btn[data-page]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      currentPage = parseInt(btn.dataset.page);
-      loadProducts();
-      document.getElementById('products').scrollIntoView({ behavior: 'smooth', block: 'start' });
-    });
-  });
-  container.querySelector('#pagePrev')?.addEventListener('click', () => {
-    if (currentPage > 1) { currentPage--; loadProducts(); document.getElementById('products').scrollIntoView({ behavior: 'smooth', block: 'start' }); }
-  });
-  container.querySelector('#pageNext')?.addEventListener('click', () => {
-    if (currentPage < totalPages) { currentPage++; loadProducts(); document.getElementById('products').scrollIntoView({ behavior: 'smooth', block: 'start' }); }
-  });
-}
 
 // Toolbar listeners
 document.getElementById('productSearch')?.addEventListener('input', e => {
   activeSearch  = e.target.value.trim();
-  currentPage   = 1;
-  loadProducts();
+  renderProductGrid(cachedProducts);
 });
 
 document.getElementById('filterBtns')?.querySelectorAll('.filter-btn').forEach(btn => {
@@ -306,15 +254,13 @@ document.getElementById('filterBtns')?.querySelectorAll('.filter-btn').forEach(b
     document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     activeFilter = btn.dataset.cat;
-    currentPage  = 1;
-    loadProducts();
+    renderProductGrid(cachedProducts);
   });
 });
 
 document.getElementById('productSort')?.addEventListener('change', e => {
   activeSort  = e.target.value;
-  currentPage = 1;
-  loadProducts();
+  renderProductGrid(cachedProducts);
 });
 
 
